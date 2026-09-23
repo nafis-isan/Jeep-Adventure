@@ -1,0 +1,680 @@
+html, body, #__next {
+  margin: 0;
+  min-height: 100%;
+  height: 100%;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  background: #f7f5f1;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.routes-main .card {
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.routes-main .card:hover,
+.routes-main .card:focus-visible {
+  transform: translateY(-3px);
+  border-color: rgba(17, 61, 53, 0.28) !important;
+  box-shadow: 0 8px 18px rgba(29, 48, 42, 0.12);
+  outline: none;
+}
+
+.routes-main .card:hover .chevron,
+.routes-main .card:focus-visible .chevron {
+  transform: translateX(4px);
+  color: #ef6b2b;
+}
+
+.routes-main .chevron {
+  transition: transform 180ms ease, color 180ms ease;
+}
+
+button, input {
+  font: inherit;
+}
+
+body {
+  min-height: 100vh;
+}
+
+.mobile-site-header {
+  display: none;
+}
+
+button, a, input {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  .page-shell {
+    display: block !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    overflow: hidden !important;
+  }
+
+  .app-sidebar {
+    position: fixed !important;
+    z-index: 20;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto !important;
+    width: 100% !important;
+    height: 60px !important;
+    min-height: 60px !important;
+    padding: 0 6px !important;
+    background: #fffdfa !important;
+    color: #786f67 !important;
+    border-top: 1px solid #e7e0d8;
+    display: block !important;
+  }
+
+  .sidebar-brand,
+  .sidebar-footer {
+    display: none !important;
+  }
+
+  .sidebar-nav {
+    height: 100%;
+    margin: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0 !important;
+    align-items: stretch;
+  }
+
+  .sidebar-nav a {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+  }
+
+  .sidebar-nav-item {
+    width: 100%;
+    min-width: 0;
+    margin: 4px 2px !important;
+    padding: 5px 2px !important;
+    border-radius: 9px !important;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px !important;
+    color: #786f67 !important;
+    font-size: 9px !important;
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  .sidebar-nav-item.is-active {
+    color: #ef5b27 !important;
+    background: transparent !important;
+  }
+
+  .sidebar-nav-item > span:first-child {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .page-main {
+    width: 100% !important;
+    height: 100vh !important;
+    max-width: 100vw;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    padding: 0 14px calc(78px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .dashboard-main {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+
+  .mobile-site-header {
+    height: 46px;
+    margin: 0 -14px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    background: #123d34;
+    color: #f5f7f3;
+  }
+
+  .dashboard-main .mobile-site-header {
+    margin-left: -20px;
+    margin-right: -20px;
+  }
+
+  .mobile-dashboard-logo {
+    gap: 6px !important;
+    transform: scale(0.58);
+    transform-origin: left center;
+    width: 210px;
+    margin-right: -96px;
+  }
+
+  .mobile-dashboard-logo > div:first-child {
+    width: 58px !important;
+    height: 58px !important;
+  }
+
+  .mobile-dashboard-logo img {
+    width: 58px !important;
+    height: 58px !important;
+  }
+
+  .dashboard-main .heroCard {
+    margin: 0 -20px !important;
+    padding: 24px 20px 0 !important;
+    min-height: 438px !important;
+  }
+
+  .dashboard-main .heroTitle {
+    font-size: 34px !important;
+    line-height: 0.98 !important;
+    max-width: 280px !important;
+    letter-spacing: -0.03em !important;
+  }
+
+  .dashboard-main .heroText {
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+    max-width: 280px !important;
+    margin: 16px 0 19px !important;
+  }
+
+  .dashboard-main .badge {
+    font-size: 9px !important;
+    padding: 6px 9px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .dashboard-main .buttonRow {
+    gap: 8px !important;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-main .primaryButton,
+  .dashboard-main .secondaryButton {
+    padding: 9px 12px !important;
+    border-radius: 8px !important;
+    font-size: 11px !important;
+  }
+
+  .dashboard-main .statGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+    top: 40px !important;
+  }
+
+  .dashboard-main .statCard {
+    min-height: 78px !important;
+    padding: 9px 11px !important;
+    border-radius: 9px !important;
+  }
+
+  .dashboard-main .statIcon {
+    font-size: 17px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .dashboard-main .statValue {
+    font-size: 22px !important;
+  }
+
+  .dashboard-main .statLabel {
+    font-size: 9px !important;
+  }
+
+  .dashboard-main .sectionHeader {
+    margin-top: 58px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .dashboard-main .sectionTitle {
+    font-size: 17px !important;
+  }
+
+  .dashboard-main .linkText {
+    font-size: 10px !important;
+  }
+
+  .dashboard-main .routeItem {
+    min-height: 68px !important;
+    gap: 9px !important;
+  }
+
+  .routes-main .card:hover,
+  .routes-main .card:focus-visible {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .dashboard-main .routeMarkerColumn {
+    width: 31px !important;
+  }
+
+  .dashboard-main .routeBadge {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 14px !important;
+  }
+
+  .dashboard-main .routeBadge svg {
+    width: 15px !important;
+    height: 15px !important;
+  }
+
+  .dashboard-main .routePosition {
+    font-size: 9px !important;
+  }
+
+  .dashboard-main .routeTitle {
+    font-size: 13px !important;
+  }
+
+  .dashboard-main .routeDesc {
+    font-size: 9px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .dashboard-main .leaderCard {
+    margin-top: 15px !important;
+    padding: 14px !important;
+    gap: 10px !important;
+    border-radius: 13px !important;
+    flex-wrap: wrap;
+  }
+
+  .dashboard-main .leaderBadge {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .dashboard-main .leaderName {
+    font-size: 17px !important;
+  }
+
+  .dashboard-main .leaderButton {
+    margin-left: 52px;
+    padding: 9px 12px !important;
+    font-size: 11px !important;
+  }
+
+  .routes-main .pageHeader,
+  .teams-main .pageHeader,
+  .scoreboard-main .pageHeader {
+    margin-bottom: 18px !important;
+  }
+
+  .routes-main .title,
+  .teams-main .title,
+  .scoreboard-main .title {
+    font-size: 30px !important;
+    line-height: 1.08 !important;
+    margin: 14px 0 8px !important;
+  }
+
+  .routes-main .subtitle,
+  .teams-main .subtitle,
+  .scoreboard-main .subtitle {
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+  }
+
+  .routes-main .card {
+    min-height: 155px !important;
+    border-radius: 13px !important;
+  }
+
+  .routes-main .leftStrip {
+    width: 45px !important;
+    font-size: 18px !important;
+  }
+
+  .routes-main .cardBody {
+    padding: 14px 12px !important;
+    min-width: 0;
+  }
+
+  .routes-main .name {
+    font-size: 17px !important;
+  }
+
+  .routes-main .description {
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .teams-main .teamGrid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .teams-main .toolbar {
+    margin-bottom: 14px !important;
+  }
+
+  .teams-main .formCard {
+    max-width: none !important;
+    margin: 0 0 14px !important;
+    padding: 14px !important;
+    border-radius: 12px !important;
+  }
+
+  .teams-main .formGrid {
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+  }
+
+  .teams-main .formField {
+    font-size: 12px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .teams-main .formInput {
+    padding: 9px 10px !important;
+    font-size: 12px !important;
+  }
+
+  .teams-main .swatches {
+    gap: 9px !important;
+  }
+
+  .teams-main .swatch {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  .teams-main .addButton {
+    width: 100%;
+    padding: 10px 14px !important;
+    font-size: 13px !important;
+  }
+
+  .teams-main .cardTitle {
+    font-size: 16px !important;
+  }
+
+  .scoreboard-main .podiumWrap {
+    gap: 5px !important;
+    margin: 28px auto 24px !important;
+    max-width: 100% !important;
+  }
+
+  .scoreboard-main .podiumItem {
+    min-width: 0 !important;
+    width: 33.33% !important;
+    flex: 1;
+  }
+
+  .scoreboard-main .avatar {
+    width: 58px !important;
+    height: 58px !important;
+    font-size: 20px !important;
+  }
+
+  .scoreboard-main .teamName {
+    font-size: 12px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .scoreboard-main .points {
+    font-size: 11px !important;
+  }
+
+  .scoreboard-main .podiumBlock {
+    width: 100% !important;
+    height: 78px !important;
+    padding-top: 9px !important;
+    font-size: 20px !important;
+  }
+
+  .scoreboard-main .listWrap {
+    padding: 10px !important;
+    border-radius: 13px !important;
+  }
+
+  .scoreboard-main .listRow {
+    min-height: 64px !important;
+    gap: 7px !important;
+    margin-bottom: 8px !important;
+    padding: 8px !important;
+    border-radius: 11px !important;
+  }
+
+  .scoreboard-main .awardBox {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 9px !important;
+  }
+
+  .scoreboard-main .awardBox svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .scoreboard-main .teamCell {
+    min-width: 0 !important;
+    gap: 6px !important;
+    font-size: 13px !important;
+  }
+
+  .scoreboard-main .avatarSmall {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 11px !important;
+  }
+
+  .scoreboard-main .scoreProgress {
+    display: none !important;
+  }
+
+  .scoreboard-main .scoreCell {
+    width: auto !important;
+    font-size: 16px !important;
+  }
+
+  .route-detail-main {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+    padding-bottom: calc(78px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .route-detail-main .mobile-site-header {
+    margin-left: -14px !important;
+    margin-right: -14px !important;
+  }
+
+  .route-detail-main > section {
+    margin-left: -14px;
+    margin-right: -14px;
+  }
+
+  .route-detail-main .route-detail-hero {
+    min-height: 0 !important;
+  }
+
+  .route-detail-main .route-detail-content {
+    display: block !important;
+    padding: 22px 0 30px !important;
+  }
+
+  .route-detail-main .route-detail-content > section {
+    min-width: 0;
+  }
+
+  .route-detail-main .route-detail-title {
+    font-size: 28px !important;
+    line-height: 1.05 !important;
+  }
+
+  .route-detail-main .route-detail-hero {
+    padding: 22px 20px 24px !important;
+  }
+
+  .route-detail-main .route-detail-back {
+    margin-bottom: 20px !important;
+    font-size: 13px !important;
+  }
+
+  .route-detail-main .route-detail-hero-icon {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 11px !important;
+  }
+
+  .route-detail-main .route-detail-position {
+    font-size: 11px !important;
+  }
+
+  .route-detail-main .route-detail-meta {
+    gap: 9px 14px !important;
+    margin-top: 20px !important;
+    font-size: 12px !important;
+  }
+
+  .route-detail-main .route-detail-meta > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .route-detail-main .route-detail-meta svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  .route-detail-main .route-detail-game-pill {
+    padding: 6px 9px !important;
+  }
+
+  .route-detail-main .route-detail-section-title,
+  .route-detail-main .route-detail-results-title {
+    font-size: 19px !important;
+  }
+
+  .route-detail-main .route-detail-description {
+    font-size: 13px !important;
+    line-height: 1.55 !important;
+    margin-bottom: 18px !important;
+  }
+
+  .route-detail-main .route-detail-card,
+  .route-detail-main .route-detail-checkin-card,
+  .route-detail-main .route-detail-score-card {
+    border-radius: 13px !important;
+    padding: 15px !important;
+  }
+
+  .route-detail-main .route-detail-card {
+    margin-bottom: 16px !important;
+  }
+
+  .route-detail-main .route-detail-card-title,
+  .route-detail-main .route-detail-score-title {
+    font-size: 15px !important;
+  }
+
+  .route-detail-main .route-detail-card-text {
+    margin-top: 13px !important;
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+  }
+
+  .route-detail-main .route-detail-muted {
+    font-size: 12px !important;
+    margin: 8px 0 14px !important;
+  }
+
+  .route-detail-main .route-detail-team-row {
+    gap: 8px !important;
+    padding: 9px 10px !important;
+    border-radius: 10px !important;
+  }
+
+  .route-detail-main .route-detail-team-info {
+    font-size: 12px !important;
+  }
+
+  .route-detail-main .route-detail-team-info small {
+    font-size: 10px !important;
+  }
+
+  .route-detail-main .route-detail-checkin-button,
+  .route-detail-main .route-detail-present {
+    padding: 7px 9px !important;
+    border-radius: 8px !important;
+    font-size: 11px !important;
+    white-space: nowrap;
+  }
+
+  .route-detail-main .route-detail-results-title {
+    margin: 22px 0 10px !important;
+  }
+
+  .route-detail-main .route-detail-empty-results {
+    min-height: 72px !important;
+    border-radius: 13px !important;
+    font-size: 12px !important;
+    text-align: center;
+    padding: 12px;
+  }
+
+  .route-detail-main .route-detail-score-card {
+    position: static !important;
+    margin-top: 18px;
+    box-shadow: none !important;
+  }
+
+  .route-detail-main .route-detail-field-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+  }
+
+  .route-detail-main .route-detail-label {
+    margin-top: 13px !important;
+    gap: 6px !important;
+    font-size: 12px !important;
+  }
+
+  .route-detail-main .route-detail-input,
+  .route-detail-main .route-detail-textarea {
+    padding: 10px !important;
+    border-radius: 9px !important;
+    font-size: 12px !important;
+  }
+
+  .route-detail-main .route-detail-textarea {
+    min-height: 68px !important;
+  }
+
+  .route-detail-main .route-detail-upload,
+  .route-detail-main .route-detail-complete,
+  .route-detail-main .route-detail-save {
+    padding: 9px 11px !important;
+    border-radius: 9px !important;
+    font-size: 12px !important;
+  }
+}

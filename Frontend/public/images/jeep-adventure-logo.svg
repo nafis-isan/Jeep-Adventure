@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">Jeep Adventure</title>
+  <circle cx="64" cy="64" r="59" fill="#f3e5c7"/>
+  <circle cx="64" cy="64" r="55" fill="none" stroke="#17382b" stroke-width="5"/>
+  <path d="M10 78c18-8 32-9 48-8 18 1 32-2 60-12v28H10z" fill="#5b301c"/>
+  <path d="M19 63 45 30l14 17 17-23 32 39-25-15-15 9-17-14z" fill="#74451f"/>
+  <path d="M23 62 42 38l12 14 20-27 29 34-21-15-11 9-17-14-13 16z" fill="#fff0c8"/>
+  <path d="M31 75h66l-4 16H34z" fill="#263b2b"/>
+  <path d="M38 68h48c7 0 15 4 19 11l-4 8H29l3-12z" fill="#d8a75d" stroke="#1c2c24" stroke-width="3"/>
+  <path d="M48 69h29l8 11H42z" fill="#f1d39b" stroke="#1c2c24" stroke-width="2"/>
+  <circle cx="44" cy="89" r="9" fill="#1c2c24"/><circle cx="44" cy="89" r="4" fill="#eee0b7"/>
+  <circle cx="82" cy="89" r="9" fill="#1c2c24"/><circle cx="82" cy="89" r="4" fill="#eee0b7"/>
+  <path d="M19 103h90" stroke="#17382b" stroke-width="9"/>
+</svg>
