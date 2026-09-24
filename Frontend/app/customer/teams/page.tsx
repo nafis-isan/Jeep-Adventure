@@ -25,12 +25,11 @@ type TeamCard = {
   status: 'pending' | 'approved' | 'rejected';
 };
 
-type TeamIconType = 'users' | 'plus' | 'trash' | 'flag' | 'check' | 'clock' | 'xmark';
+type TeamIconType = 'users' | 'plus' | 'flag' | 'check' | 'clock' | 'xmark';
 
 function TeamIcon({ type }: { type: TeamIconType }) {
   const common = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
   if (type === 'plus') return <svg viewBox="0 0 24 24" width="17" height="17" {...common}><path d="M12 5v14M5 12h14" /></svg>;
-  if (type === 'trash') return <svg viewBox="0 0 24 24" width="16" height="16" {...common}><path d="M5 7h14M10 11v6M14 11v6M9 7V4h6v3M7 7l1 13h8l1-13" /></svg>;
   if (type === 'flag') return <svg viewBox="0 0 24 24" width="15" height="15" {...common}><path d="M5 21V4M5 5c4-3 7 3 14 0v9c-7 3-10-3-14 0" /></svg>;
   if (type === 'check') return <svg viewBox="0 0 24 24" width="16" height="16" {...common}><circle cx="12" cy="12" r="9" /><path d="m8.5 12 2.2 2.2 4.8-5" /></svg>;
   if (type === 'clock') return <svg viewBox="0 0 24 24" width="14" height="14" {...common}><circle cx="12" cy="12" r="9" /><path d="M12 6v6l4 2" /></svg>;
@@ -38,7 +37,7 @@ function TeamIcon({ type }: { type: TeamIconType }) {
   return <svg viewBox="0 0 24 24" width="17" height="17" {...common}><circle cx="9" cy="8" r="3" /><path d="M3.5 19v-1.2A4.8 4.8 0 0 1 8.3 13h1.4a4.8 4.8 0 0 1 4.8 4.8V19M15.5 5.5a3 3 0 0 1 0 5.8M16.5 13h.5a4 4 0 0 1 4 4v1" /></svg>;
 }
 
-export default function TeamsPage() {
+export default function CustomerTeamsPage() {
   const { loading, isAuthenticated } = useAuth();
   const router = useRouter();
   const [teamList, setTeamList] = useState<TeamCard[]>(initialTeams);
@@ -48,8 +47,6 @@ export default function TeamsPage() {
   const [motto, setMotto] = useState('');
   const [color, setColor] = useState('#2e9d63');
   const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState<string | null>(null);
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -98,65 +95,21 @@ export default function TeamsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ name: name.trim(), initials, motto: motto.trim(), status: 'approved' }),
+        body: JSON.stringify({ name: name.trim(), initials, motto: motto.trim(), status: 'pending' }), // Customer mendaftar secara mandiri -> status pending
       });
       const payload = await response.json();
-      if (!response.ok) throw new Error(payload.message || 'Tim gagal ditambahkan');
+      if (!response.ok) throw new Error(payload.message || 'Tim gagal didaftarkan');
       if (!payload.data?.id) throw new Error('Respons tim tidak valid');
 
-      setTeamList((current) => [...current, { id: payload.data.id, initials, name: name.trim(), members: Number(members), motto: motto.trim(), color, total: 0, status: 'approved' }]);
+      setTeamList((current) => [...current, { id: payload.data.id, initials, name: name.trim(), members: Number(members), motto: motto.trim(), color, total: 0, status: 'pending' }]);
       setName('');
       setMembers('');
       setMotto('');
       setShowForm(false);
     } catch (err: any) {
-      setError(err?.message || 'Tim gagal ditambahkan');
+      setError(err?.message || 'Tim gagal didaftarkan');
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleUpdateStatus = async (teamId: string, status: 'approved' | 'rejected') => {
-    setUpdatingId(teamId);
-    setError('');
-    try {
-      const response = await fetch(`${API_URL}/api/teams/${teamId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ status }),
-      });
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        throw new Error(payload.message || 'Gagal memperbarui status tim');
-      }
-
-      setTeamList((current) => current.map((item) => (item.id === teamId ? { ...item, status } : item)));
-    } catch (err: any) {
-      setError(err?.message || 'Gagal memperbarui status tim');
-    } finally {
-      setUpdatingId(null);
-    }
-  };
-
-  const handleDeleteTeam = async (team: TeamCard) => {
-    if (!team.id || !window.confirm(`Hapus tim ${team.name}?`)) return;
-
-    setError('');
-    setDeleting(team.id);
-    try {
-      const response = await fetch(`${API_URL}/api/teams/${team.id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.message || 'Tim gagal dihapus');
-
-      setTeamList((current) => current.filter((item) => item.id !== team.id));
-    } catch (err: any) {
-      setError(err?.message || 'Tim gagal dihapus');
-    } finally {
-      setDeleting(null);
     }
   };
 
@@ -168,7 +121,7 @@ export default function TeamsPage() {
         <div className="pageHeader" style={styles.pageHeader}>
           <div className="headerBadge" style={styles.headerBadge}><TeamIcon type="users" /> TIM PESERTA</div>
           <h1 className="title" style={styles.title}>Daftar Tim</h1>
-          <p className="subtitle" style={styles.subtitle}>Kelola tim yang bertualang di rute jeep serta verifikasi pendaftaran tim mandiri.</p>
+          <p className="subtitle" style={styles.subtitle}>Informasi daftar tim yang berpartisipasi dalam petualangan.</p>
         </div>
 
         {error ? <div style={styles.globalError}>{error}</div> : null}
@@ -185,7 +138,7 @@ export default function TeamsPage() {
             </div>
             <label style={styles.formField}>Motto / Seruan Tim<input value={motto} onChange={(event) => setMotto(event.target.value)} placeholder="Mis. Jelajah tanpa batas!" style={styles.formInput} /></label>
             <div style={styles.colorRow}><span style={styles.formField}>Warna Identitas</span><div style={styles.swatches}>{['#2e9d63', '#e8833a', '#2868e8', '#9634e8', '#1299b7', '#d69200', '#e52d2d', '#147b73'].map((swatch) => <button type="button" aria-label={`Pilih warna ${swatch}`} key={swatch} onClick={() => setColor(swatch)} style={{ ...styles.swatch, background: swatch, outline: color === swatch ? '2px solid #18352d' : 'none', outlineOffset: 2 }} />)}</div></div>
-            <div style={styles.formActions}><button type="button" onClick={handleAddTeam} disabled={saving} style={styles.saveButton}>{saving ? 'Menyimpan...' : <><TeamIcon type="plus" /> Simpan Tim</>}</button><button type="button" onClick={() => setShowForm(false)} style={styles.cancelButton}>Batal</button></div>
+            <div style={styles.formActions}><button type="button" onClick={handleAddTeam} disabled={saving} style={styles.saveButton}>{saving ? 'Mendaftarkan...' : <><TeamIcon type="plus" /> Daftarkan Tim</>}</button><button type="button" onClick={() => setShowForm(false)} style={styles.cancelButton}>Batal</button></div>
           </div>
         ) : null}
 
@@ -204,42 +157,6 @@ export default function TeamsPage() {
                   <div style={styles.cardTitleWrap}>
                     <div style={styles.cardTitle}>{team.name}</div>
                     <div style={styles.cardMeta}>{team.members} anggota</div>
-                  </div>
-                  <div style={styles.actionIconsGroup}>
-                    {team.status === 'pending' ? (
-                      <>
-                        <button
-                          type="button"
-                          aria-label={`Setujui tim ${team.name}`}
-                          title="Setujui Tim"
-                          disabled={updatingId === team.id}
-                          onClick={() => team.id && handleUpdateStatus(team.id, 'approved')}
-                          style={styles.actionBtnApprove}
-                        >
-                          <TeamIcon type="check" />
-                        </button>
-                        <button
-                          type="button"
-                          aria-label={`Tolak tim ${team.name}`}
-                          title="Tolak Tim"
-                          disabled={updatingId === team.id}
-                          onClick={() => team.id && handleUpdateStatus(team.id, 'rejected')}
-                          style={styles.actionBtnReject}
-                        >
-                          <TeamIcon type="xmark" />
-                        </button>
-                      </>
-                    ) : null}
-                    <button
-                      type="button"
-                      aria-label={`Hapus tim ${team.name}`}
-                      title={`Hapus tim ${team.name}`}
-                      onClick={() => handleDeleteTeam(team)}
-                      disabled={!team.id || deleting === team.id}
-                      style={styles.deleteButton}
-                    >
-                      <TeamIcon type="trash" />
-                    </button>
                   </div>
                 </div>
 
@@ -291,10 +208,6 @@ const styles: Record<string, React.CSSProperties> = {
   cardTitleWrap: { flex: 1, minWidth: 0 },
   cardTitle: { fontSize: 19, fontWeight: 800, marginBottom: 3, lineHeight: 1.2 },
   cardMeta: { fontSize: 16, opacity: 0.95 },
-  actionIconsGroup: { display: 'flex', alignItems: 'center', gap: 6 },
-  actionBtnApprove: { border: 'none', background: 'rgba(255,255,255,0.25)', color: '#fff', width: 32, height: 32, borderRadius: 8, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' },
-  actionBtnReject: { border: 'none', background: 'rgba(255,255,255,0.25)', color: '#fff', width: 32, height: 32, borderRadius: 8, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' },
-  deleteButton: { border: 'none', background: 'transparent', color: 'inherit', padding: 4, opacity: 0.85, cursor: 'pointer', display: 'inline-flex' },
   cardSubHeader: { padding: '10px 14px 0' },
   statusBadge: { display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700 },
   motto: { padding: '12px 14px 10px', fontSize: 16, color: '#3c4b4a', minHeight: 52 },

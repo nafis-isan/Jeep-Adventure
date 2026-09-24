@@ -20,4 +20,13 @@ router.post('/', requireAuth, async (req, res) => {
     const team = await prisma.team.create({ data: parsed.data });
     return res.status(201).json({ success: true, data: team });
 });
+router.delete('/:id', requireAuth, async (req, res) => {
+    try {
+        await prisma.team.delete({ where: { id: req.params.id } });
+        return res.json({ success: true });
+    }
+    catch {
+        return res.status(404).json({ success: false, message: 'Team not found' });
+    }
+});
 export default router;

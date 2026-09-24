@@ -6,10 +6,10 @@ import { useAuth } from '@/context/AuthContext';
 import Logo from '@/components/Logo';
 
 const navItems = [
-  { label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
-  { label: 'Route & Games', href: '/routes', icon: 'map' },
-  { label: 'Tim', href: '/teams', icon: 'users' },
-  { label: 'Papan Skor', href: '/scoreboard', icon: 'trophy' },
+  { label: 'Dashboard', href: '/customer/dashboard', icon: 'dashboard' },
+  { label: 'Route & Games', href: '/customer/routes', icon: 'map' },
+  { label: 'Tim', href: '/customer/teams', icon: 'users' },
+  { label: 'Papan Skor', href: '/customer/scoreboard', icon: 'trophy' },
 ];
 
 type SidebarIconType = 'dashboard' | 'map' | 'users' | 'trophy' | 'logout';
@@ -24,7 +24,7 @@ function SidebarIcon({ type }: { type: SidebarIconType }) {
   return <svg viewBox="0 0 24 24" width="22" height="22" {...common}><path d="m4 16 4-8 4 3 4-7 4 12" /><path d="M4 20h16" /></svg>;
 }
 
-export default function Sidebar() {
+export default function CustomerSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { logout, user } = useAuth();
