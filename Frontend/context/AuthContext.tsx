@@ -1,12 +1,13 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 type User = {
   id: string;
   name: string;
   email: string;
+  role: 'CUSTOMER' | 'FACILITATOR';
 };
 
 type AuthContextValue = {
@@ -27,12 +28,15 @@ function isPublicAuthPage(pathname: string) {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const authRequestRef = useRef(0);
   const router = useRouter();
   const pathname = usePathname();
 
   const fetchProfile = useCallback(async () => {
+    const requestId = ++authRequestRef.current;
     try {
       const response = await fetch(`${API_URL}/api/auth/me`, { credentials: 'include' });
+      if (requestId !== authRequestRef.current) return;
       if (!response.ok) {
         setUser(null);
         if (!isPublicAuthPage(pathname)) router.push('/login');
@@ -54,20 +58,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [fetchProfile]);
 
   const login = useCallback(async (email: string, password: string) => {
-    const response = await fetch(`${API_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
+      });
 
-    const payload = await response.json();
-    if (!response.ok) {
-      throw new Error(payload.message || 'Login failed');
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.message || 'Email atau password salah');
+      }
+
+      authRequestRef.current += 1;
+      setUser(payload.user);
+      router.push(payload.user.role === 'FACILITATOR' ? '/fasilitator/dashboard' : '/customer/dashboard');
+    } catch (error) {
+      if (error instanceof TypeError) {
+        throw new Error('Backend tidak dapat dihubungi. Pastikan server berjalan di port 4000.');
+      }
+      throw error;
     }
-
-    setUser(payload.user);
-    router.push('/dashboard');
   }, [router]);
 
   const logout = useCallback(async () => {

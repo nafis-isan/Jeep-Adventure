@@ -7,6 +7,8 @@ import CustomerSidebar from '@/components/CustomerSidebar';
 import Logo from '@/components/Logo';
 import { useAuth } from '@/context/AuthContext';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
 const routeDetails: Record<string, {
   position: string;
   name: string;
@@ -57,6 +59,8 @@ type Team = {
   color: string;
 };
 
+type Score = { teamId: string; points: number; photoData?: string | null; note?: string | null };
+
 function DetailIcon({ type }: { type: 'target' | 'pin' | 'clock' | 'check' }) {
   const common = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
   if (type === 'pin') return <svg viewBox="0 0 24 24" width="18" height="18" {...common}><path d="M19 10c0 5-7 10-7 10S5 15 5 10a7 7 0 1 1 14 0Z" /><circle cx="12" cy="10" r="2.2" /></svg>;
@@ -72,6 +76,7 @@ export default function RouteDetailPage() {
   const route = routeDetails[params.id] ?? routeDetails.garuda;
   const [teams, setTeams] = useState<Team[]>([]);
   const [checkedInTeams, setCheckedInTeams] = useState<string[]>([]);
+  const [scores, setScores] = useState<Score[]>([]);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) router.push('/login');
@@ -82,8 +87,11 @@ export default function RouteDetailPage() {
 
     const loadTeams = async () => {
       try {
-        const response = await fetch('/api/teams', { cache: 'no-store' });
-        if (!response.ok) return;
+        const [response, routesResponse] = await Promise.all([
+          fetch(`${API_URL}/api/teams`, { cache: 'no-store', credentials: 'include' }),
+          fetch(`${API_URL}/api/routes`, { cache: 'no-store', credentials: 'include' }),
+        ]);
+        if (!response.ok || !routesResponse.ok) return;
 
         const payload: { data?: Array<{ id: string; name: string; initials: string }> } = await response.json();
         const colors: Record<string, string> = {
@@ -95,6 +103,16 @@ export default function RouteDetailPage() {
           ...team,
           color: colors[team.name] ?? '#59746b',
         })));
+        const routesPayload: { data?: Array<{ id: string; position: number }> } = await routesResponse.json();
+        const currentRoute = routesPayload.data?.find((item) => item.position === Number(route.position.replace('POS ', '')));
+        if (currentRoute) {
+          const [checkinsResponse, scoresResponse] = await Promise.all([
+            fetch(`${API_URL}/api/checkins?routeId=${currentRoute.id}`, { cache: 'no-store', credentials: 'include' }),
+            fetch(`${API_URL}/api/scores?routeId=${currentRoute.id}`, { cache: 'no-store', credentials: 'include' }),
+          ]);
+          if (checkinsResponse.ok) setCheckedInTeams(((await checkinsResponse.json()).data ?? []).map((item: { teamId: string }) => item.teamId));
+          if (scoresResponse.ok) setScores((await scoresResponse.json()).data ?? []);
+        }
       } catch {
         setTeams([]);
       }
@@ -102,12 +120,6 @@ export default function RouteDetailPage() {
 
     loadTeams();
   }, [loading, isAuthenticated]);
-
-  const toggleCheckIn = (teamId: string) => {
-    setCheckedInTeams((current) => current.includes(teamId)
-      ? current.filter((id) => id !== teamId)
-      : [...current, teamId]);
-  };
 
   if (loading || !isAuthenticated) return null;
 
@@ -143,7 +155,9 @@ export default function RouteDetailPage() {
               <p className="route-detail-muted" style={styles.muted}>Tim tap check-in saat tiba di pos ini.</p>
               {teams.map((team) => {
                 const isCheckedIn = checkedInTeams.includes(team.id);
-                return <div className="route-detail-team-row" style={isCheckedIn ? styles.teamRowChecked : styles.teamRow} key={team.id}><span style={{ ...styles.teamDot, background: team.color }} /><div className="route-detail-team-info" style={styles.teamInfo}><strong>{team.name}</strong>{isCheckedIn ? <small><DetailIcon type="check" /> Tuesday, 08:19</small> : null}</div><button className={isCheckedIn ? 'route-detail-present' : 'route-detail-checkin-button'} type="button" onClick={() => toggleCheckIn(team.id)} style={isCheckedIn ? styles.present : styles.checkinButton}>{isCheckedIn ? 'Hadir' : <><DetailIcon type="check" /> Check-in</>}</button></div>;
+                const teamScore = scores.find((item) => item.teamId === team.id);
+                const hasPersistentPhoto = teamScore?.photoData?.startsWith('data:image/') === true;
+                return <div className="route-detail-team-row" style={isCheckedIn ? styles.teamRowChecked : styles.teamRow} key={team.id}><span style={{ ...styles.teamDot, background: team.color }} /><div className="route-detail-team-info" style={styles.teamInfo}><strong>{team.name}</strong>{isCheckedIn ? <small><DetailIcon type="check" /> Check-in tersimpan{teamScore ? ` · ${teamScore.points} poin` : ''}</small> : <small>Belum check-in</small>}{hasPersistentPhoto ? <img src={teamScore?.photoData || ''} alt={`Bukti ${team.name}`} style={styles.teamPhoto} /> : teamScore?.photoData ? <small>Bukti lama perlu diunggah ulang oleh fasilitator.</small> : null}{teamScore?.note ? <small>{teamScore.note}</small> : null}</div></div>;
               })}
             </div>
           </section>
@@ -179,6 +193,7 @@ const styles: Record<string, React.CSSProperties> = {
   teamRowChecked: { display: 'flex', alignItems: 'center', gap: 12, border: '1px solid #bcefd1', background: '#f5fff8', borderRadius: 13, padding: '12px 14px', marginTop: 10 },
   teamDot: { width: 13, height: 13, borderRadius: '50%', flexShrink: 0 },
   teamInfo: { flex: 1, display: 'flex', flexDirection: 'column', gap: 4, fontSize: 15 },
+  teamPhoto: { display: 'block', width: 120, maxHeight: 80, objectFit: 'cover', borderRadius: 8, marginTop: 6 },
   present: { color: '#218b57', background: '#d9f8e5', borderRadius: 999, padding: '6px 11px', fontSize: 13, fontWeight: 700 },
   checkinButton: { display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', borderRadius: 10, background: '#285b43', color: '#fff', padding: '10px 13px', cursor: 'pointer', fontSize: 14, fontWeight: 700 },
 };

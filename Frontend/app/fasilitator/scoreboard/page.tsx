@@ -6,11 +6,8 @@ import Sidebar from '@/components/Sidebar';
 import { useAuth } from '@/context/AuthContext';
 import Logo from '@/components/Logo';
 
-const ranking = [
-  { name: 'Garuda Offroad', initials: 'GA', color: '#2f9b72', points: 0 },
-  { name: 'Naga Liar', initials: 'NA', color: '#d77c2b', points: 0 },
-  { name: 'Elang Penjelajah', initials: 'EL', color: '#1d7ce2', points: 0 },
-];
+const ranking: Array<{ name: string; initials: string; color: string; points: number; completedGames: number }> = [];
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 function AwardIcon({ type }: { type: 'crown' | 'medal' | 'trophy' }) {
   const common = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
@@ -35,10 +32,10 @@ export default function ScoreboardPage() {
     let active = true;
     const loadRanking = async () => {
       try {
-        const response = await fetch('/api/leaderboard', { cache: 'no-store' });
+        const response = await fetch(`${API_URL}/api/leaderboard`, { cache: 'no-store', credentials: 'include' });
         if (!response.ok) return;
 
-        const payload: { data?: Array<{ teamName: string; initials: string; totalPoints: number }> } = await response.json();
+        const payload: { data?: Array<{ name: string; initials: string; totalPoints: number; completedGames?: number }> } = await response.json();
         if (!active || !payload.data) return;
 
         const colors: Record<string, string> = {
@@ -46,11 +43,12 @@ export default function ScoreboardPage() {
           'Naga Liar': '#d77c2b',
           'Elang Penjelajah': '#1d7ce2',
         };
-        setCurrentRanking(payload.data.map((item) => ({
-          name: item.teamName,
+        setCurrentRanking([...payload.data].sort((a, b) => b.totalPoints - a.totalPoints).map((item) => ({
+          name: item.name,
           initials: item.initials,
-          color: colors[item.teamName] ?? '#59746b',
+          color: colors[item.name] ?? '#59746b',
           points: item.totalPoints,
+          completedGames: item.completedGames ?? 0,
         })));
       } catch {
         // Keep the last known ranking when a refresh fails.
@@ -68,9 +66,11 @@ export default function ScoreboardPage() {
 
   if (loading || !isAuthenticated) return null;
 
-  const emptyTeam = { name: 'Belum ada tim', initials: '--', color: '#b8c1bd', points: 0 };
+  const emptyTeam = { name: 'Belum ada tim', initials: '--', color: '#b8c1bd', points: 0, completedGames: 0 };
   const podiumRanking = [0, 1, 2].map((index) => currentRanking[index] ?? emptyTeam);
-  const leaderboardRows = [currentRanking[1], currentRanking[0], currentRanking[2]].filter(Boolean);
+  const leaderboardRows = currentRanking.filter(Boolean);
+  const highestPoints = Math.max(...podiumRanking.map((item) => item.points), 1);
+  const podiumHeight = (points: number) => `${70 + Math.round((points / highestPoints) * 90)}px`;
 
   return (
     <div className="page-shell scoreboard-shell" style={styles.appShell}>
@@ -88,19 +88,19 @@ export default function ScoreboardPage() {
             <div className="podiumAvatar" style={{ ...styles.avatar, background: podiumRanking[1].color }}>{podiumRanking[1].initials}</div>
             <div style={styles.teamName}>{podiumRanking[1].name}</div>
             <div style={styles.points}>{podiumRanking[1].points} poin</div>
-            <div className="podiumBlock" style={styles.podiumBlock}><span>2</span></div>
+            <div className="podiumBlock" style={{ ...styles.podiumBlock, height: podiumHeight(podiumRanking[1].points) }}><span>2</span></div>
           </div>
           <div className="podiumItem podium-first" style={styles.podiumItem}>
             <div className="podiumAvatar" style={{ ...styles.avatar, background: podiumRanking[0].color }}>{podiumRanking[0].initials}</div>
             <div style={styles.teamName}>{podiumRanking[0].name}</div>
             <div style={styles.points}>{podiumRanking[0].points} poin</div>
-            <div className="podiumBlock" style={styles.podiumBlock}><span>1</span></div>
+            <div className="podiumBlock" style={{ ...styles.podiumBlock, height: podiumHeight(podiumRanking[0].points) }}><span>1</span></div>
           </div>
           <div className="podiumItem podium-third" style={styles.podiumItem}>
             <div className="podiumAvatar" style={{ ...styles.avatar, background: podiumRanking[2].color }}>{podiumRanking[2].initials}</div>
             <div style={styles.teamName}>{podiumRanking[2].name}</div>
             <div style={styles.points}>{podiumRanking[2].points} poin</div>
-            <div className="podiumBlock" style={styles.podiumBlock}><span>3</span></div>
+            <div className="podiumBlock" style={{ ...styles.podiumBlock, height: podiumHeight(podiumRanking[2].points) }}><span>3</span></div>
           </div>
         </div>
 
@@ -114,7 +114,7 @@ export default function ScoreboardPage() {
                 <div style={{ ...styles.avatarSmall, background: item.color }}>{item.initials}</div>
                 <div>{item.name}</div>
               </div>
-              <div className="scoreProgress" style={styles.scoreProgress}><div style={styles.progressTrack} /><span>0/6 pos</span></div>
+              <div className="scoreProgress" style={styles.scoreProgress}><div style={styles.progressTrack} /><span>{item.completedGames}/6 pos</span></div>
               <div style={styles.scoreCell}>{item.points}</div>
             </div>
           ))}

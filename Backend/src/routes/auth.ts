@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
+import { UserRole } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
 import { createSessionToken } from '../lib/auth.js';
@@ -11,6 +12,7 @@ const registerSchema = z.object({
   name: z.string().min(2, 'Name is required'),
   email: z.string().email('Invalid email'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
+  role: z.nativeEnum(UserRole).default(UserRole.CUSTOMER),
 });
 
 const loginSchema = z.object({
@@ -25,7 +27,7 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ success: false, message: parsed.error.issues[0]?.message || 'Invalid input' });
     }
 
-    const { name, email, password } = parsed.data;
+    const { name, email, password, role } = parsed.data;
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       return res.status(409).json({ success: false, message: 'User already exists' });
@@ -33,8 +35,8 @@ router.post('/register', async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { name, email, passwordHash },
-      select: { id: true, name: true, email: true },
+      data: { name, email, passwordHash, role },
+      select: { id: true, name: true, email: true, role: true },
     });
 
     const token = createSessionToken(user);
@@ -72,7 +74,7 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Email or password is incorrect' });
     }
 
-    const sessionUser = { id: user.id, name: user.name, email: user.email };
+    const sessionUser = { id: user.id, name: user.name, email: user.email, role: user.role };
     const token = createSessionToken(sessionUser);
     res.cookie('jeep_session', token, {
       httpOnly: true,

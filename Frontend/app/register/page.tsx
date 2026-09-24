@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Logo from '@/components/Logo';
@@ -9,19 +10,20 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState<'CUSTOMER' | 'FACILITATOR'>('CUSTOMER');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/dashboard');
+      router.push(user?.role === 'FACILITATOR' ? '/fasilitator/dashboard' : '/customer/dashboard');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, user]);
 
   if (isAuthenticated) {
     return null;
@@ -41,7 +43,7 @@ export default function RegisterPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name: name.trim(), email: email.trim(), password, role }),
       });
       const payload = await response.json();
 
@@ -49,7 +51,7 @@ export default function RegisterPage() {
         throw new Error(payload.message || 'Unable to create account');
       }
 
-      router.push('/dashboard');
+      router.push(payload.user.role === 'FACILITATOR' ? '/fasilitator/dashboard' : '/customer/dashboard');
     } catch (err: any) {
       setError(err?.message || 'Unable to create account');
     } finally {
@@ -85,6 +87,12 @@ export default function RegisterPage() {
         <label style={styles.fieldLabel}>Email</label>
         <input value={email} onChange={(event) => setEmail(event.target.value)} style={styles.input} placeholder="you@example.com" type="email" />
 
+        <label style={styles.fieldLabel}>Account type</label>
+        <select value={role} onChange={(event) => setRole(event.target.value as 'CUSTOMER' | 'FACILITATOR')} style={styles.input}>
+          <option value="CUSTOMER">Customer</option>
+          <option value="FACILITATOR">Fasilitator</option>
+        </select>
+
         <label style={styles.fieldLabel}>Password</label>
         <input value={password} onChange={(event) => setPassword(event.target.value)} style={styles.input} type="password" placeholder="••••••••" />
 
@@ -97,7 +105,7 @@ export default function RegisterPage() {
       </div>
 
       <p style={styles.footerText}>
-        Already have an account? <button type="button" onClick={() => router.push('/login')} style={styles.linkButton}>Log in</button>
+        Already have an account? <Link href="/login" style={styles.linkButton}>Log in</Link>
       </p>
     </div>
   );

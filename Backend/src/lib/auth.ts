@@ -1,10 +1,12 @@
 import jwt from 'jsonwebtoken';
+import { UserRole } from '@prisma/client';
 import { env } from '../config/env.js';
 
 export type SessionUser = {
   id: string;
   email: string;
   name: string;
+  role: UserRole;
 };
 
 export function createSessionToken(user: SessionUser) {

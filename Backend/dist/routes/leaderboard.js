@@ -14,6 +14,7 @@ router.get('/', requireAuth, async (req, res) => {
         name: team.name,
         initials: team.initials,
         totalPoints: team.Score.reduce((sum, score) => sum + score.points, 0),
+        completedGames: team.Score.filter((score) => score.completed).length,
     }))
         .sort((a, b) => b.totalPoints - a.totalPoints);
     return res.json({ success: true, data: leaderboard });

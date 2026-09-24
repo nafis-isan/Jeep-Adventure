@@ -52,7 +52,7 @@ export default function RoutesPage() {
 
         <div className="list" style={styles.list}>
           {routes.map((route) => (
-            <Link className="card" href={`/routes/${route.id}`} key={route.position} style={{ ...styles.card, textDecoration: 'none', color: 'inherit' }}>
+            <Link className="card" href={`/fasilitator/routes/${route.id}`} key={route.position} style={{ ...styles.card, textDecoration: 'none', color: 'inherit' }}>
               <div style={{ ...styles.leftStrip, background: route.color }}>
                 <div style={styles.posIcon}><RouteIcon type={route.icon as RouteIconType} /></div>
                 <div style={styles.posNumber}>{route.position.replace('POS ', '')}</div>

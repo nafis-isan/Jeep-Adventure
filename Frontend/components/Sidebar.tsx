@@ -6,10 +6,10 @@ import { useAuth } from '@/context/AuthContext';
 import Logo from '@/components/Logo';
 
 const navItems = [
-  { label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
-  { label: 'Route & Games', href: '/routes', icon: 'map' },
-  { label: 'Tim', href: '/teams', icon: 'users' },
-  { label: 'Papan Skor', href: '/scoreboard', icon: 'trophy' },
+  { label: 'Dashboard', href: '/fasilitator/dashboard', icon: 'dashboard' },
+  { label: 'Route & Games', href: '/fasilitator/routes', icon: 'map' },
+  { label: 'Tim', href: '/fasilitator/teams', icon: 'users' },
+  { label: 'Papan Skor', href: '/fasilitator/scoreboard', icon: 'trophy' },
 ];
 
 type SidebarIconType = 'dashboard' | 'map' | 'users' | 'trophy' | 'logout';

@@ -1,33 +1,35 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Logo from '@/components/Logo';
 
 export default function LoginPage() {
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const router = useRouter();
-  const [email, setEmail] = useState('user@example.com');
-  const [password, setPassword] = useState('password');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/dashboard');
+      router.push(user?.role === 'FACILITATOR' ? '/fasilitator/dashboard' : '/customer/dashboard');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, user]);
 
   if (isAuthenticated) {
     return null;
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (event?: React.FormEvent<HTMLFormElement>) => {
+    event?.preventDefault();
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
+      await login(email.trim(), password);
     } catch (err: any) {
       setError(err?.message || 'Email or password is incorrect');
     } finally {
@@ -44,7 +46,7 @@ export default function LoginPage() {
       <h1 style={styles.title}>Welcome back</h1>
       <p style={styles.subtitle}>Log in to your account</p>
 
-      <div style={styles.card}>
+      <form style={styles.card} onSubmit={handleSubmit}>
         <button type="button" style={styles.googleButton}>
           <span style={{ fontSize: 18 }}>G</span>
           <span>Continue with Google</span>
@@ -65,6 +67,8 @@ export default function LoginPage() {
           style={styles.input}
           placeholder="you@example.com"
           type="email"
+          autoComplete="email"
+          required
         />
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 18 }}>
@@ -77,19 +81,20 @@ export default function LoginPage() {
           style={styles.input}
           type="password"
           placeholder="••••••••"
+          autoComplete="current-password"
+          required
         />
 
         <button
-          type="button"
-          onClick={handleSubmit}
+          type="submit"
           style={loading ? { ...styles.primaryButton, opacity: 0.7 } : styles.primaryButton}
         >
           {loading ? 'Logging in...' : 'Log in'}
         </button>
-      </div>
+      </form>
 
       <p style={styles.signupText}>
-        Don't have an account? <a href="/register" style={styles.linkButton}>Create one</a>
+        Don't have an account? <Link href="/register" style={styles.linkButton}>Create one</Link>
       </p>
     </div>
   );

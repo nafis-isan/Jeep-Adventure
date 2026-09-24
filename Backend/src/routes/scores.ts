@@ -10,10 +10,14 @@ const scoreSchema = z.object({
   routeId: z.string().min(1),
   points: z.number().int().nonnegative(),
   completed: z.boolean().optional(),
+  note: z.string().optional(),
+  photoData: z.string().optional(),
 });
 
 router.get('/', requireAuth, async (req, res) => {
+  const routeId = typeof req.query.routeId === 'string' ? req.query.routeId : undefined;
   const score = await prisma.score.findMany({
+    where: routeId ? { routeId } : undefined,
     include: { team: true, route: true },
     orderBy: { createdAt: 'desc' },
   });

@@ -64,14 +64,14 @@ export default function TeamsPage() {
         const response = await fetch(`${API_URL}/api/teams`, { credentials: 'include' });
         if (!response.ok) return;
 
-        const payload: { data?: Array<{ id: string; name: string; initials: string; motto: string; status?: 'pending' | 'approved' | 'rejected' }> } = await response.json();
+        const payload: { data?: Array<{ id: string; name: string; initials: string; motto: string; status?: string }> } = await response.json();
         if (payload.data) {
           setTeamList(payload.data.map((team, index) => ({
             ...team,
             members: 0,
             color: initialTeams[index % initialTeams.length]?.color || '#59746b',
             total: 0,
-            status: team.status || 'approved',
+            status: (team.status || 'PENDING').toLowerCase() as TeamCard['status'],
           })));
         }
       } catch {

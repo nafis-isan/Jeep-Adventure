@@ -101,7 +101,7 @@ export default function DashboardPage() {
             Rute offroad dengan titik-titik pemberhentian berisi mini games seru — ketepatan, puzzle, estafet, hingga treasure hunt. Jeep + team building dalam satu petualangan.
           </p>
           <div className="buttonRow" style={styles.buttonRow}>
-            <Link className="primaryButton" href="/routes" style={styles.primaryButton}><HeroIcon type="map" />Lihat Rute &amp; Games</Link>
+            <Link className="primaryButton" href="/fasilitator/routes" style={styles.primaryButton}><HeroIcon type="map" />Lihat Rute &amp; Games</Link>
             <Link className="secondaryButton" href="/scoreboard" style={styles.secondaryButton}><StatIcon type="trophy" />Papan Skor</Link>
           </div>
 
@@ -115,12 +115,12 @@ export default function DashboardPage() {
 
         <div className="sectionHeader" style={styles.sectionHeader}>
           <h2 className="sectionTitle" style={styles.sectionTitle}>Route Petualangan</h2>
-          <Link className="linkText" href="/routes" style={styles.linkText}>Semua titik →</Link>
+          <Link className="linkText" href="/fasilitator/routes" style={styles.linkText}>Semua titik →</Link>
         </div>
 
         <div className="routeList" style={styles.routeList}>
           {routeData.map((route, index) => (
-            <Link className="routeItem" href={`/routes/${route.id}`} key={route.id} style={{ ...styles.routeItem, textDecoration: 'none', color: 'inherit' }}>
+            <Link className="routeItem" href={`/fasilitator/routes/${route.id}`} key={route.id} style={{ ...styles.routeItem, textDecoration: 'none', color: 'inherit' }}>
               <div className="routeMarkerColumn" style={styles.routeMarkerColumn}>
                 <div className="routeBadge" style={{ ...styles.routeBadge, background: route.color }}><RouteIcon type={route.icon as RouteIconType} /></div>
                 {index < routeData.length - 1 ? <div className="routeLine" style={styles.routeLine} /> : null}

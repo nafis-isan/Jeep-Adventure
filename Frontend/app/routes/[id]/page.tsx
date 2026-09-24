@@ -7,6 +7,8 @@ import Sidebar from '@/components/Sidebar';
 import Logo from '@/components/Logo';
 import { useAuth } from '@/context/AuthContext';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
 const routeDetails: Record<string, {
   position: string;
   name: string;
@@ -57,6 +59,21 @@ type Team = {
   color: string;
 };
 
+type BackendRoute = {
+  id: string;
+  position: number;
+};
+
+type Score = {
+  id: string;
+  teamId: string;
+  routeId: string;
+  points: number;
+  completed: boolean;
+  note?: string | null;
+  photoData?: string | null;
+};
+
 function DetailIcon({ type }: { type: 'target' | 'pin' | 'clock' | 'check' | 'upload' }) {
   const common = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
   if (type === 'pin') return <svg viewBox="0 0 24 24" width="18" height="18" {...common}><path d="M19 10c0 5-7 10-7 10S5 15 5 10a7 7 0 1 1 14 0Z" /><circle cx="12" cy="10" r="2.2" /></svg>;
@@ -73,10 +90,16 @@ export default function RouteDetailPage() {
   const route = routeDetails[params.id] ?? routeDetails.garuda;
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeam, setSelectedTeam] = useState('');
+  const [routeId, setRouteId] = useState('');
   const [score, setScore] = useState('0');
   const [note, setNote] = useState('');
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState('');
   const [completed, setCompleted] = useState(false);
   const [checkedInTeams, setCheckedInTeams] = useState<string[]>([]);
+  const [scores, setScores] = useState<Score[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
 
   useEffect(() => {
     if (!loading && !isAuthenticated) router.push('/login');
@@ -87,10 +110,30 @@ export default function RouteDetailPage() {
 
     const loadTeams = async () => {
       try {
-        const response = await fetch('/api/teams', { cache: 'no-store' });
-        if (!response.ok) return;
+        const [teamsResponse, routesResponse] = await Promise.all([
+          fetch(`${API_URL}/api/teams`, { cache: 'no-store', credentials: 'include' }),
+          fetch(`${API_URL}/api/routes`, { cache: 'no-store', credentials: 'include' }),
+        ]);
+        if (!teamsResponse.ok || !routesResponse.ok) return;
 
-        const payload: { data?: Array<{ id: string; name: string; initials: string }> } = await response.json();
+        const payload: { data?: Array<{ id: string; name: string; initials: string }> } = await teamsResponse.json();
+        const routesPayload: { data?: BackendRoute[] } = await routesResponse.json();
+        const currentRoute = routesPayload.data?.find((item) => item.position === Number(route.position.replace('POS ', '')));
+        setRouteId(currentRoute?.id || '');
+        if (currentRoute) {
+          const [checkinsResponse, scoresResponse] = await Promise.all([
+            fetch(`${API_URL}/api/checkins?routeId=${currentRoute.id}`, { cache: 'no-store', credentials: 'include' }),
+            fetch(`${API_URL}/api/scores?routeId=${currentRoute.id}`, { cache: 'no-store', credentials: 'include' }),
+          ]);
+          if (checkinsResponse.ok) {
+            const checkinsPayload: { data?: Array<{ teamId: string }> } = await checkinsResponse.json();
+            setCheckedInTeams((checkinsPayload.data ?? []).map((item) => item.teamId));
+          }
+          if (scoresResponse.ok) {
+            const scoresPayload: { data?: Score[] } = await scoresResponse.json();
+            setScores(scoresPayload.data ?? []);
+          }
+        }
         const colors: Record<string, string> = {
           'Garuda Offroad': '#3f7543',
           'Naga Liar': '#e56a00',
@@ -108,10 +151,65 @@ export default function RouteDetailPage() {
     loadTeams();
   }, [loading, isAuthenticated]);
 
-  const toggleCheckIn = (teamId: string) => {
-    setCheckedInTeams((current) => current.includes(teamId)
-      ? current.filter((id) => id !== teamId)
-      : [...current, teamId]);
+  const toggleCheckIn = async (teamId: string) => {
+    if (!routeId) return;
+    const checked = checkedInTeams.includes(teamId);
+    const url = `${API_URL}/api/checkins?teamId=${teamId}&routeId=${routeId}`;
+    const response = await fetch(url, {
+      method: checked ? 'DELETE' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: checked ? undefined : JSON.stringify({ teamId, routeId }),
+    });
+    if (response.ok) {
+      setCheckedInTeams((current) => checked ? current.filter((id) => id !== teamId) : [...current, teamId]);
+    }
+  };
+
+  const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedPhoto = event.target.files?.[0];
+    if (!selectedPhoto) return;
+
+    setPhoto(selectedPhoto);
+    const reader = new FileReader();
+    reader.onload = () => setPhotoPreview(typeof reader.result === 'string' ? reader.result : '');
+    reader.readAsDataURL(selectedPhoto);
+  };
+
+  const handleSaveScore = async () => {
+    if (!selectedTeam || !routeId) return;
+
+    setSaving(true);
+    setSaveMessage('');
+    try {
+      const response = await fetch(`${API_URL}/api/scores`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          teamId: selectedTeam,
+          routeId,
+          points: Number(score),
+          completed,
+          note,
+          photoData: photoPreview || undefined,
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.message || 'Skor gagal disimpan');
+
+      setSaveMessage('Skor berhasil disimpan.');
+      setScore('0');
+      setNote('');
+      setPhoto(null);
+      setPhotoPreview('');
+      const scoresResponse = await fetch(`${API_URL}/api/scores?routeId=${routeId}`, { cache: 'no-store', credentials: 'include' });
+      if (scoresResponse.ok) setScores((await scoresResponse.json()).data ?? []);
+    } catch (error) {
+      setSaveMessage(error instanceof Error ? error.message : 'Skor gagal disimpan');
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading || !isAuthenticated) return null;
@@ -122,7 +220,7 @@ export default function RouteDetailPage() {
       <main className="page-main route-detail-main" style={styles.mainContent}>
         <div className="mobile-site-header"><Logo light className="mobile-dashboard-logo" /></div>
         <section className="route-detail-hero" style={{ ...styles.hero, background: route.color }}>
-          <Link className="route-detail-back" href="/routes" style={styles.backLink}>← Route</Link>
+          <Link className="route-detail-back" href="/fasilitator/routes" style={styles.backLink}>← Route</Link>
           <div style={styles.heroTitleRow}>
             <div className="route-detail-hero-icon" style={styles.heroIcon}><DetailIcon type="target" /></div>
             <div><div className="route-detail-position" style={styles.position}>{route.position}</div><h1 className="route-detail-title" style={styles.title}>{route.name}</h1></div>
@@ -148,7 +246,8 @@ export default function RouteDetailPage() {
               <p className="route-detail-muted" style={styles.muted}>Tim tap check-in saat tiba di pos ini.</p>
               {teams.map((team) => {
                 const isCheckedIn = checkedInTeams.includes(team.id);
-                return <div className="route-detail-team-row" style={isCheckedIn ? styles.teamRowChecked : styles.teamRow} key={team.id}><span style={{ ...styles.teamDot, background: team.color }} /><div className="route-detail-team-info" style={styles.teamInfo}><strong>{team.name}</strong>{isCheckedIn ? <small><DetailIcon type="check" /> Tuesday, 08:19</small> : null}</div><button className={isCheckedIn ? 'route-detail-present' : 'route-detail-checkin-button'} type="button" onClick={() => toggleCheckIn(team.id)} style={isCheckedIn ? styles.present : styles.checkinButton}>{isCheckedIn ? 'Hadir' : <><DetailIcon type="check" /> Check-in</>}</button></div>;
+                const teamScore = scores.find((item) => item.teamId === team.id);
+                return <div className="route-detail-team-row" style={isCheckedIn ? styles.teamRowChecked : styles.teamRow} key={team.id}><span style={{ ...styles.teamDot, background: team.color }} /><div className="route-detail-team-info" style={styles.teamInfo}><strong>{team.name}</strong>{isCheckedIn ? <small><DetailIcon type="check" /> Check-in tersimpan{teamScore ? ` · ${teamScore.points} poin` : ''}</small> : null}{teamScore?.photoData ? <img src={teamScore.photoData} alt={`Bukti ${team.name}`} style={styles.teamPhoto} /> : null}</div><button className={isCheckedIn ? 'route-detail-present' : 'route-detail-checkin-button'} type="button" onClick={() => toggleCheckIn(team.id)} style={isCheckedIn ? styles.present : styles.checkinButton}>{isCheckedIn ? 'Hadir' : <><DetailIcon type="check" /> Check-in</>}</button></div>;
               })}
             </div>
             <h2 className="route-detail-results-title" style={styles.resultsTitle}>Hasil Titik Ini</h2>
@@ -159,13 +258,20 @@ export default function RouteDetailPage() {
             <h2 className="route-detail-score-title" style={styles.scoreTitle}>Catat Skor Tim</h2>
             <p className="route-detail-muted" style={styles.muted}>Pilih tim, masukkan skor, dan unggah foto bukti.</p>
             <div className="route-detail-field-grid" style={styles.fieldGrid}>
-              <label className="route-detail-label" style={styles.label}>Pilih Tim<select className="route-detail-input" value={selectedTeam} onChange={(event) => setSelectedTeam(event.target.value)} style={styles.input}><option value="">Pilih tim peserta</option>{teams.map((team) => <option key={team.name} value={team.name}>{team.name}</option>)}</select></label>
+              <label className="route-detail-label" style={styles.label}>Pilih Tim<select className="route-detail-input" value={selectedTeam} onChange={(event) => setSelectedTeam(event.target.value)} style={styles.input}><option value="">Pilih tim peserta</option>{teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>
               <label className="route-detail-label" style={styles.label}>Skor (maks {route.maxPoints})<input className="route-detail-input" type="number" min="0" max={route.maxPoints} value={score} onChange={(event) => setScore(event.target.value)} style={styles.input} /></label>
             </div>
-            <label className="route-detail-label" style={styles.label}>Foto Bukti (opsional)<button className="route-detail-upload" type="button" style={styles.uploadButton}><DetailIcon type="upload" /> Unggah Foto</button></label>
+            <label className="route-detail-label" style={styles.label}>Foto Bukti (opsional)
+              <span className="route-detail-upload" style={styles.uploadButton}><DetailIcon type="upload" /> {photo ? 'Ganti Foto' : 'Unggah Foto'}
+                <input type="file" accept="image/*" onChange={handlePhotoChange} style={styles.fileInput} />
+              </span>
+              {photoPreview ? <img src={photoPreview} alt={`Preview bukti ${photo?.name || ''}`} style={styles.photoPreview} /> : null}
+              {photo ? <span style={styles.photoName}>{photo.name}</span> : null}
+            </label>
             <label className="route-detail-label" style={styles.label}>Catatan Panitia<textarea className="route-detail-textarea" value={note} onChange={(event) => setNote(event.target.value)} placeholder="Catatan performa tim, pelanggaran, dll." style={styles.textarea} /></label>
             <button className="route-detail-complete" type="button" onClick={() => setCompleted((value) => !value)} style={completed ? { ...styles.completeButton, color: '#fff', background: '#2d9b61' } : styles.completeButton}><DetailIcon type="check" /> {completed ? 'Sudah Selesai' : 'Belum Selesai'}</button>
-            <button className="route-detail-save" type="button" disabled={!selectedTeam} style={styles.saveButton}>Simpan Skor</button>
+            {saveMessage ? <div style={styles.saveMessage}>{saveMessage}</div> : null}
+            <button className="route-detail-save" type="button" onClick={handleSaveScore} disabled={!selectedTeam || !routeId || saving} style={styles.saveButton}>{saving ? 'Menyimpan...' : 'Simpan Skor'}</button>
           </aside>
         </div>
       </main>
@@ -198,6 +304,7 @@ const styles: Record<string, React.CSSProperties> = {
   teamRowChecked: { display: 'flex', alignItems: 'center', gap: 12, border: '1px solid #bcefd1', background: '#f5fff8', borderRadius: 13, padding: '12px 14px', marginTop: 10 },
   teamDot: { width: 13, height: 13, borderRadius: '50%', flexShrink: 0 },
   teamInfo: { flex: 1, display: 'flex', flexDirection: 'column', gap: 4, fontSize: 15 },
+  teamPhoto: { display: 'block', width: 120, maxHeight: 80, objectFit: 'cover', borderRadius: 8, marginTop: 6 },
   present: { color: '#218b57', background: '#d9f8e5', borderRadius: 999, padding: '6px 11px', fontSize: 13, fontWeight: 700 },
   checkinButton: { display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', borderRadius: 10, background: '#285b43', color: '#fff', padding: '10px 13px', cursor: 'pointer', fontSize: 14, fontWeight: 700 },
   resultsTitle: { margin: '28px 0 14px', fontSize: 23, fontWeight: 800 },
@@ -208,7 +315,11 @@ const styles: Record<string, React.CSSProperties> = {
   label: { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 18, fontSize: 14, fontWeight: 600, color: '#393632' },
   input: { width: '100%', boxSizing: 'border-box', border: '1px solid #e0dad3', borderRadius: 11, padding: '13px 12px', background: '#fffdfb', color: '#514a44', fontSize: 15 },
   uploadButton: { alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid #e0dad3', borderRadius: 11, background: '#fffdfb', color: '#554d47', padding: '11px 14px', cursor: 'pointer', fontSize: 14 },
+  fileInput: { position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' },
+  photoPreview: { display: 'block', width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 11, marginTop: 10, border: '1px solid #e0dad3' },
+  photoName: { color: '#766d65', fontSize: 12, fontWeight: 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
   textarea: { width: '100%', minHeight: 76, boxSizing: 'border-box', resize: 'vertical', border: '1px solid #e0dad3', borderRadius: 11, padding: 12, background: '#fffdfb', color: '#514a44', fontSize: 14 },
   completeButton: { display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid #73e5a4', borderRadius: 11, background: '#f2fff7', color: '#29945b', padding: '12px 14px', cursor: 'pointer', marginTop: 18, fontSize: 14, fontWeight: 700 },
+  saveMessage: { marginTop: 12, color: '#357052', fontSize: 13, fontWeight: 600 },
   saveButton: { display: 'block', border: 'none', borderRadius: 11, background: '#9aaea3', color: '#fff', padding: '13px 18px', marginTop: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer' },
 };
