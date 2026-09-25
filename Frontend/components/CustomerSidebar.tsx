@@ -133,9 +133,6 @@ export default function CustomerSidebar() {
           <span>Keluar</span>
         </button>
 
-        <div style={{ paddingTop: 8, fontSize: 11, color: '#a9c2ba', wordBreak: 'break-all' }}>
-          https://jeep-quest-go.base.app
-        </div>
       </div>
     </aside>
   );

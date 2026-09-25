@@ -29,6 +29,23 @@ router.post('/', requireAuth, async (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({ success: false, message: parsed.error.issues[0]?.message || 'Invalid score payload' });
   }
+  if (parsed.data.completed !== true) {
+    return res.status(400).json({ success: false, message: 'Score hanya dapat disimpan setelah game selesai.' });
+  }
+
+  const existingCheckIn = await prisma.checkIn.findUnique({
+    where: { teamId_routeId: { teamId: parsed.data.teamId, routeId: parsed.data.routeId } },
+  });
+  if (!existingCheckIn) {
+    return res.status(409).json({ success: false, message: 'Team harus check-in terlebih dahulu sebelum mengisi skor.' });
+  }
+
+  const existingScore = await prisma.score.findFirst({
+    where: { teamId: parsed.data.teamId, routeId: parsed.data.routeId },
+  });
+  if (existingScore) {
+    return res.status(409).json({ success: false, message: 'Score untuk team ini sudah tersimpan.' });
+  }
 
   const score = await prisma.score.create({
     data: {

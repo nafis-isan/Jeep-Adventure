@@ -114,7 +114,7 @@ export default function ScoreboardPage() {
                 <div style={{ ...styles.avatarSmall, background: item.color }}>{item.initials}</div>
                 <div>{item.name}</div>
               </div>
-              <div className="scoreProgress" style={styles.scoreProgress}><div style={styles.progressTrack} /><span>{item.completedGames}/6 pos</span></div>
+              <div className="scoreProgress" style={styles.scoreProgress}><div style={styles.progressTrack}><div style={{ ...styles.progressFill, width: `${(Math.min(Math.max(item.completedGames, 0), 6) / 6) * 100}%` }} /></div><span>{item.completedGames}/6 pos</span></div>
               <div style={styles.scoreCell}>{item.points}</div>
             </div>
           ))}
@@ -290,5 +290,12 @@ const styles: Record<string, React.CSSProperties> = {
     height: 6,
     borderRadius: 999,
     background: '#eeeae5',
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 999,
+    background: '#2d9b61',
+    transition: 'width 300ms ease',
   },
 };

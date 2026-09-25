@@ -16,7 +16,10 @@ const loginSchema = z.object({
     email: z.string().email('Invalid email'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
 });
-router.post('/register', async (req, res) => {
+router.post('/accounts', requireAuth, async (req, res) => {
+    if (req.user?.role !== UserRole.FACILITATOR) {
+        return res.status(403).json({ success: false, message: 'Only facilitators can create accounts' });
+    }
     try {
         const parsed = registerSchema.safeParse(req.body);
         if (!parsed.success) {
@@ -31,14 +34,6 @@ router.post('/register', async (req, res) => {
         const user = await prisma.user.create({
             data: { name, email, passwordHash, role },
             select: { id: true, name: true, email: true, role: true },
-        });
-        const token = createSessionToken(user);
-        res.cookie('jeep_session', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            path: '/',
-            maxAge: 7 * 24 * 60 * 60 * 1000,
         });
         return res.status(201).json({ success: true, user });
     }

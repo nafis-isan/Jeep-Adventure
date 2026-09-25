@@ -13,8 +13,17 @@ const teamSchema = z.object({
 });
 const statusSchema = z.object({ status: teamStatusSchema });
 router.get('/', requireAuth, async (req, res) => {
-    const teams = await prisma.team.findMany({ orderBy: { createdAt: 'asc' } });
-    return res.json({ success: true, data: teams });
+    const teams = await prisma.team.findMany({
+        include: { CheckIn: true, Score: true },
+        orderBy: { createdAt: 'asc' },
+    });
+    const data = teams.map(({ CheckIn, Score, ...team }) => ({
+        ...team,
+        completedRoutes: CheckIn.length,
+        completedGames: Score.filter((score) => score.completed).length,
+        totalPoints: Score.reduce((total, score) => total + score.points, 0),
+    }));
+    return res.json({ success: true, data });
 });
 router.post('/', requireAuth, async (req, res) => {
     const parsed = teamSchema.safeParse(req.body);

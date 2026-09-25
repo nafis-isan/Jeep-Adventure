@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Logo from '@/components/Logo';
@@ -93,9 +92,7 @@ export default function LoginPage() {
         </button>
       </form>
 
-      <p style={styles.signupText}>
-        Don't have an account? <Link href="/register" style={styles.linkButton}>Create one</Link>
-      </p>
+      <p style={styles.signupText}>Akun dibuat oleh fasilitator.</p>
     </div>
   );
 }

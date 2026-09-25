@@ -151,13 +151,13 @@ export default function RouteDetailPage() {
               <p className="route-detail-card-text" style={styles.cardText}>{route.instruction} Waktu {route.duration} menit per tim.</p>
             </div>
             <div className="route-detail-checkin-card" style={styles.checkinCard}>
-              <div style={styles.checkinHeader}><h3 className="route-detail-card-title" style={styles.cardTitle}><span style={styles.smallIcon}><DetailIcon type="check" /></span> Check-in Tim</h3><strong>{checkedInTeams.length}/{teams.length}</strong></div>
-              <p className="route-detail-muted" style={styles.muted}>Tim tap check-in saat tiba di pos ini.</p>
+              <div style={styles.checkinHeader}><h3 className="route-detail-card-title" style={styles.cardTitle}><span style={styles.smallIcon}><DetailIcon type="check" /></span> Status Kedatangan Tim</h3><strong>{checkedInTeams.length}/{teams.length}</strong></div>
+              <p className="route-detail-muted" style={styles.muted}>Fasilitator mencatat kedatangan tim saat tiba di pos ini.</p>
               {teams.map((team) => {
                 const isCheckedIn = checkedInTeams.includes(team.id);
                 const teamScore = scores.find((item) => item.teamId === team.id);
                 const hasPersistentPhoto = teamScore?.photoData?.startsWith('data:image/') === true;
-                return <div className="route-detail-team-row" style={isCheckedIn ? styles.teamRowChecked : styles.teamRow} key={team.id}><span style={{ ...styles.teamDot, background: team.color }} /><div className="route-detail-team-info" style={styles.teamInfo}><strong>{team.name}</strong>{isCheckedIn ? <small><DetailIcon type="check" /> Check-in tersimpan{teamScore ? ` · ${teamScore.points} poin` : ''}</small> : <small>Belum check-in</small>}{hasPersistentPhoto ? <img src={teamScore?.photoData || ''} alt={`Bukti ${team.name}`} style={styles.teamPhoto} /> : teamScore?.photoData ? <small>Bukti lama perlu diunggah ulang oleh fasilitator.</small> : null}{teamScore?.note ? <small>{teamScore.note}</small> : null}</div></div>;
+                return <div className="route-detail-team-row" style={isCheckedIn ? styles.teamRowChecked : styles.teamRow} key={team.id}><span style={{ ...styles.teamDot, background: team.color }} /><div className="route-detail-team-info" style={styles.teamInfo}><strong>{team.name}</strong>{isCheckedIn ? <small><DetailIcon type="check" /> Kedatangan tercatat{teamScore ? ` · ${teamScore.points} poin` : ''}</small> : <small>Belum tercatat</small>}{hasPersistentPhoto ? <img src={teamScore?.photoData || ''} alt={`Bukti ${team.name}`} style={styles.teamPhoto} /> : teamScore?.photoData ? <small>Bukti lama perlu diunggah ulang oleh fasilitator.</small> : null}{teamScore?.note ? <small>{teamScore.note}</small> : null}</div></div>;
               })}
             </div>
           </section>

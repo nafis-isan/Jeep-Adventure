@@ -16,6 +16,8 @@ const routeData = [
   { position: 'POS 6', name: 'Pos Nusantara', icon: 'compass', color: '#d69200', short: 'Treasure Hunt', desc: 'Pos pamungkas: treasure hunt mencari clue tersembunyi yang disiapkan panitia di area perkemahan.', id: 'nusantara' },
 ];
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
 type RouteIconType = 'target' | 'puzzle' | 'water' | 'users' | 'camera' | 'compass';
 
 function RouteIcon({ type }: { type: RouteIconType }) {
@@ -33,6 +35,13 @@ type StatIconType = 'flag' | 'users' | 'game' | 'trophy';
 
 type LeaderboardEntry = {
   teamName: string;
+  totalPoints: number;
+  completedGames: number;
+};
+
+type LeaderboardResponseEntry = {
+  name?: string;
+  teamName?: string;
   totalPoints: number;
   completedGames: number;
 };
@@ -68,11 +77,12 @@ export default function DashboardPage() {
     let active = true;
     const loadLeader = async () => {
       try {
-        const response = await fetch('/api/leaderboard', { cache: 'no-store' });
+        const response = await fetch(`${API_URL}/api/leaderboard`, { cache: 'no-store', credentials: 'include' });
         if (!response.ok) return;
 
-        const payload: { data?: LeaderboardEntry[] } = await response.json();
-        if (active && payload.data?.[0]) setLeader(payload.data[0]);
+        const payload: { data?: LeaderboardResponseEntry[] } = await response.json();
+        const first = payload.data?.[0];
+        if (active && first?.name) setLeader({ teamName: first.name, totalPoints: first.totalPoints, completedGames: first.completedGames });
       } catch {
         // Keep the last known leader when a refresh fails.
       }
@@ -356,6 +366,7 @@ const styles: Record<string, React.CSSProperties> = {
     height: 72,
     borderRadius: '50%',
     background: '#123d34',
+    color: '#f2c84b',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

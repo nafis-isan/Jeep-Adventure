@@ -91,7 +91,7 @@ export default function RouteDetailPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeam, setSelectedTeam] = useState('');
   const [routeId, setRouteId] = useState('');
-  const [score, setScore] = useState('0');
+  const [score, setScore] = useState('');
   const [note, setNote] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState('');
@@ -177,8 +177,24 @@ export default function RouteDetailPage() {
   };
 
   const handleSaveScore = async () => {
-    if (!selectedTeam || !routeId) return;
-
+    if (!selectedTeam || !routeId || !score.trim() || !isScoreValid) {
+      setSaveMessage('Pilih tim dan isi skor terlebih dahulu.');
+      return;
+    }
+    if (!checkedInTeams.includes(selectedTeam)) {
+      setSaveMessage('Tim harus check-in terlebih dahulu sebelum mengisi skor.');
+      setSelectedTeam('');
+      return;
+    }
+    if (scores.some((item) => item.teamId === selectedTeam)) {
+      setSaveMessage('Skor tim ini sudah tersimpan dan tidak dapat diisi dua kali.');
+      setSelectedTeam('');
+      return;
+    }
+    if (!completed) {
+      setSaveMessage('Ubah status menjadi Sudah Selesai sebelum menyimpan skor.');
+      return;
+    }
     setSaving(true);
     setSaveMessage('');
     try {
@@ -199,7 +215,7 @@ export default function RouteDetailPage() {
       if (!response.ok) throw new Error(payload.message || 'Skor gagal disimpan');
 
       setSaveMessage('Skor berhasil disimpan.');
-      setScore('0');
+      setScore('');
       setNote('');
       setPhoto(null);
       setPhotoPreview('');
@@ -211,6 +227,10 @@ export default function RouteDetailPage() {
       setSaving(false);
     }
   };
+
+  const isScoreValid = score.trim() !== '' && Number.isFinite(Number(score)) && Number(score) >= 0 && Number(score) <= route.maxPoints;
+  const selectedTeamHasScore = scores.some((item) => item.teamId === selectedTeam);
+  const canSaveScore = Boolean(selectedTeam && routeId && isScoreValid && completed && checkedInTeams.includes(selectedTeam) && !selectedTeamHasScore && !saving);
 
   if (loading || !isAuthenticated) return null;
 
@@ -251,14 +271,28 @@ export default function RouteDetailPage() {
               })}
             </div>
             <h2 className="route-detail-results-title" style={styles.resultsTitle}>Hasil Titik Ini</h2>
-            <div className="route-detail-empty-results" style={styles.emptyResults}>Belum ada skor tercatat di titik ini.</div>
+            {scores.length > 0 ? (
+              <div style={styles.resultsList}>
+                {scores.map((item) => (
+                  <div className="route-detail-result-row" style={styles.resultRow} key={item.id}>
+                    <div style={styles.resultHeader}>
+                      <strong>{teams.find((team) => team.id === item.teamId)?.name || 'Tim tidak dikenal'}</strong>
+                      <strong style={styles.resultPoints}>{item.points} poin</strong>
+                    </div>
+                    <div style={styles.resultMeta}><DetailIcon type="check" /> {item.completed ? 'Game selesai' : 'Belum selesai'}</div>
+                    {item.note ? <div style={styles.resultNote}>{item.note}</div> : null}
+                    {item.photoData ? <img src={item.photoData} alt={`Bukti ${teams.find((team) => team.id === item.teamId)?.name || 'tim'}`} style={styles.resultPhoto} /> : null}
+                  </div>
+                ))}
+              </div>
+            ) : <div className="route-detail-empty-results" style={styles.emptyResults}>Belum ada skor tercatat di titik ini.</div>}
           </section>
 
           <aside className="route-detail-score-card" style={styles.scoreCard}>
             <h2 className="route-detail-score-title" style={styles.scoreTitle}>Catat Skor Tim</h2>
             <p className="route-detail-muted" style={styles.muted}>Pilih tim, masukkan skor, dan unggah foto bukti.</p>
             <div className="route-detail-field-grid" style={styles.fieldGrid}>
-              <label className="route-detail-label" style={styles.label}>Pilih Tim<select className="route-detail-input" value={selectedTeam} onChange={(event) => setSelectedTeam(event.target.value)} style={styles.input}><option value="">Pilih tim peserta</option>{teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>
+              <label className="route-detail-label" style={styles.label}>Pilih Tim<select className="route-detail-input" value={selectedTeam} onChange={(event) => setSelectedTeam(event.target.value)} style={styles.input}><option value="">Pilih tim yang sudah check-in</option>{teams.map((team) => { const isCheckedIn = checkedInTeams.includes(team.id); const hasScore = scores.some((item) => item.teamId === team.id); return <option key={team.id} value={team.id} disabled={!isCheckedIn || hasScore}>{team.name}{hasScore ? ' (Skor tersimpan)' : !isCheckedIn ? ' (Belum check-in)' : ''}</option>; })}</select></label>
               <label className="route-detail-label" style={styles.label}>Skor (maks {route.maxPoints})<input className="route-detail-input" type="number" min="0" max={route.maxPoints} value={score} onChange={(event) => setScore(event.target.value)} style={styles.input} /></label>
             </div>
             <label className="route-detail-label" style={styles.label}>Foto Bukti (opsional)
@@ -271,7 +305,7 @@ export default function RouteDetailPage() {
             <label className="route-detail-label" style={styles.label}>Catatan Panitia<textarea className="route-detail-textarea" value={note} onChange={(event) => setNote(event.target.value)} placeholder="Catatan performa tim, pelanggaran, dll." style={styles.textarea} /></label>
             <button className="route-detail-complete" type="button" onClick={() => setCompleted((value) => !value)} style={completed ? { ...styles.completeButton, color: '#fff', background: '#2d9b61' } : styles.completeButton}><DetailIcon type="check" /> {completed ? 'Sudah Selesai' : 'Belum Selesai'}</button>
             {saveMessage ? <div style={styles.saveMessage}>{saveMessage}</div> : null}
-            <button className="route-detail-save" type="button" onClick={handleSaveScore} disabled={!selectedTeam || !routeId || saving} style={styles.saveButton}>{saving ? 'Menyimpan...' : 'Simpan Skor'}</button>
+            <button className="route-detail-save" type="button" onClick={handleSaveScore} disabled={!canSaveScore} style={canSaveScore ? styles.readySaveButton : styles.saveButton}>{saving ? 'Menyimpan...' : 'Simpan Skor'}</button>
           </aside>
         </div>
       </main>
@@ -309,6 +343,13 @@ const styles: Record<string, React.CSSProperties> = {
   checkinButton: { display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', borderRadius: 10, background: '#285b43', color: '#fff', padding: '10px 13px', cursor: 'pointer', fontSize: 14, fontWeight: 700 },
   resultsTitle: { margin: '28px 0 14px', fontSize: 23, fontWeight: 800 },
   emptyResults: { minHeight: 92, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed #e1dbd4', borderRadius: 17, color: '#8a8179', fontSize: 15, background: '#fffdfb' },
+  resultsList: { display: 'grid', gap: 12 },
+  resultRow: { border: '1px solid #e1dbd4', borderRadius: 14, padding: '14px 16px', background: '#fffdfb' },
+  resultHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, color: '#202b29', fontSize: 16 },
+  resultPoints: { color: '#d36f16', whiteSpace: 'nowrap' },
+  resultMeta: { display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, color: '#357052', fontSize: 13, fontWeight: 600 },
+  resultNote: { marginTop: 8, color: '#766d65', fontSize: 14, lineHeight: 1.45 },
+  resultPhoto: { display: 'block', width: 140, maxHeight: 100, objectFit: 'cover', borderRadius: 9, marginTop: 10 },
   scoreCard: { alignSelf: 'start', position: 'sticky', top: 24, background: '#fffdfb', border: '1px solid #e1dbd4', borderRadius: 17, padding: 22, boxShadow: '0 2px 8px rgba(39,35,30,0.04)' },
   scoreTitle: { margin: 0, fontSize: 20, fontWeight: 800 },
   fieldGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 },
@@ -322,4 +363,5 @@ const styles: Record<string, React.CSSProperties> = {
   completeButton: { display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid #73e5a4', borderRadius: 11, background: '#f2fff7', color: '#29945b', padding: '12px 14px', cursor: 'pointer', marginTop: 18, fontSize: 14, fontWeight: 700 },
   saveMessage: { marginTop: 12, color: '#357052', fontSize: 13, fontWeight: 600 },
   saveButton: { display: 'block', border: 'none', borderRadius: 11, background: '#9aaea3', color: '#fff', padding: '13px 18px', marginTop: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer' },
+  readySaveButton: { display: 'block', border: 'none', borderRadius: 11, background: '#2d9b61', color: '#fff', padding: '13px 18px', marginTop: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer' },
 };

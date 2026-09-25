@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+  import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 type User = {
@@ -22,7 +22,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 function isPublicAuthPage(pathname: string) {
-  return pathname === '/login' || pathname === '/register';
+  return pathname === '/login';
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
