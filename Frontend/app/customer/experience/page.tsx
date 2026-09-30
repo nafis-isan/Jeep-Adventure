@@ -60,9 +60,9 @@ export default function CustomerExperiencePage() {
     const loadPageData = async () => {
       try {
         const [teamsResponse, routesResponse, experiencesResponse] = await Promise.all([
-          fetch(`${API_URL}/api/teams`, { credentials: 'include', cache: 'no-store' }),
-          fetch(`${API_URL}/api/routes`, { credentials: 'include', cache: 'no-store' }),
-          fetch(`${API_URL}/api/experiences`, { credentials: 'include', cache: 'no-store' }),
+          fetch(`${API_URL}/api/teams`, { credentials: 'include', cache: 'force-cache' }),
+          fetch(`${API_URL}/api/routes`, { credentials: 'include', cache: 'force-cache' }),
+          fetch(`${API_URL}/api/experiences`, { credentials: 'include', cache: 'force-cache' }),
         ]);
         const teamsPayload: { data?: Team[] } = await teamsResponse.json();
         const routesPayload: { data?: RouteOption[] } = await routesResponse.json();

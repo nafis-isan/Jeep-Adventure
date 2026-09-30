@@ -88,8 +88,8 @@ export default function RouteDetailPage() {
     const loadTeams = async () => {
       try {
         const [response, routesResponse] = await Promise.all([
-          fetch(`${API_URL}/api/teams`, { cache: 'no-store', credentials: 'include' }),
-          fetch(`${API_URL}/api/routes`, { cache: 'no-store', credentials: 'include' }),
+          fetch(`${API_URL}/api/teams`, { cache: 'force-cache', credentials: 'include' }),
+          fetch(`${API_URL}/api/routes`, { cache: 'force-cache', credentials: 'include' }),
         ]);
         if (!response.ok || !routesResponse.ok) return;
 
@@ -107,8 +107,8 @@ export default function RouteDetailPage() {
         const currentRoute = routesPayload.data?.find((item) => item.position === Number(route.position.replace('POS ', '')));
         if (currentRoute) {
           const [checkinsResponse, scoresResponse] = await Promise.all([
-            fetch(`${API_URL}/api/checkins?routeId=${currentRoute.id}`, { cache: 'no-store', credentials: 'include' }),
-            fetch(`${API_URL}/api/scores?routeId=${currentRoute.id}`, { cache: 'no-store', credentials: 'include' }),
+            fetch(`${API_URL}/api/checkins?routeId=${currentRoute.id}`, { cache: 'force-cache', credentials: 'include' }),
+            fetch(`${API_URL}/api/scores?routeId=${currentRoute.id}`, { cache: 'force-cache', credentials: 'include' }),
           ]);
           if (checkinsResponse.ok) setCheckedInTeams(((await checkinsResponse.json()).data ?? []).map((item: { teamId: string }) => item.teamId));
           if (scoresResponse.ok) setScores((await scoresResponse.json()).data ?? []);

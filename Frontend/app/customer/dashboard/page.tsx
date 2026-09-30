@@ -74,27 +74,20 @@ export default function DashboardPage() {
   useEffect(() => {
     if (loading || !isAuthenticated) return;
 
-    let active = true;
     const loadLeader = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/leaderboard`, { cache: 'no-store', credentials: 'include' });
+        const response = await fetch(`${API_URL}/api/leaderboard`, { cache: 'force-cache', credentials: 'include' });
         if (!response.ok) return;
 
         const payload: { data?: LeaderboardResponseEntry[] } = await response.json();
         const first = payload.data?.[0];
-        if (active && first?.name) setLeader({ teamName: first.name, totalPoints: first.totalPoints, completedGames: first.completedGames });
+        if (first?.name) setLeader({ teamName: first.name, totalPoints: first.totalPoints, completedGames: first.completedGames });
       } catch {
         // Keep the last known leader when a refresh fails.
       }
     };
 
     loadLeader();
-    const refreshTimer = window.setInterval(loadLeader, 5000);
-
-    return () => {
-      active = false;
-      window.clearInterval(refreshTimer);
-    };
   }, [loading, isAuthenticated]);
 
   if (loading || !user) return null;

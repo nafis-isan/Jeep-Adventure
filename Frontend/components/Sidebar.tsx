@@ -36,7 +36,7 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="app-sidebar"
+      className="app-sidebar facilitator-sidebar"
       style={{
         width: 284,
         flexShrink: 0,

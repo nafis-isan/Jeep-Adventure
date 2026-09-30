@@ -26,29 +26,29 @@ const routeDetails: Record<string, {
     instruction: 'Setiap anggota tim melempar 5 kali peluru ringan (bola karet) ke sasaran bertingkat (10, 20, 50 poin). Skor dihitung dari total tembusan. Pelaksanaan aman, jarak lempar 5 meter.',
   },
   naga: {
-    position: 'POS 2', name: 'Pos Naga', gameType: 'Puzzle Race', color: '#2d67e8', location: 'Hutan Pinus', duration: 15, maxPoints: 100,
+    position: 'POS 2', name: 'Pos Naga', gameType: 'Puzzle Race', color: '#2563eb', location: 'Hutan Bambu', duration: 15, maxPoints: 100,
     description: 'Tim harus menyusun puzzle besar untuk membuka petunjuk rute menuju pos berikutnya.',
     instruction: 'Panitia memberi kotak berisi keping puzzle (gambar peta rute). Tim menyusun hingga utuh untuk mendapat kartu petunjuk berikutnya. Bantuan panitia mengurangi 10 poin per bantuan. Waktu maksimal 15 menit.',
   },
   elang: {
-    position: 'POS 3', name: 'Pos Elang', gameType: 'Water Transfer', color: '#1299b7', location: 'Mata Air', duration: 12, maxPoints: 100,
+    position: 'POS 3', name: 'Pos Elang', gameType: 'Water Transfer', color: '#0f9bb4', location: 'Sungai Kering', duration: 12, maxPoints: 100,
     description: 'Memanah? Bukan. Memindahkan air dari ember sumber ke ember tujuan menggunakan alat sederhana.',
     instruction: 'Tim diberi 1 spons besar dan 2 ember. Pindahkan air dari ember sumber ke ember tujuan sejauh 8 meter dalam 12 menit. Skor = (liter air pindah / 5 liter) x 100. Bekerja bergantian, tidak boleh lari.',
   },
   serigala: {
-    position: 'POS 4', name: 'Pos Serigala', gameType: 'Relay Challenge', color: '#14a64b', location: 'Lapangan Jeep', duration: 8, maxPoints: 100,
+    position: 'POS 4', name: 'Pos Serigala', gameType: 'Relay Challenge', color: '#16a34a', location: 'Lapangan Terbuka', duration: 8, maxPoints: 100,
     description: 'Estafet antaranggota tim dengan rangkaian tantangan cepat: balap karung, bakiak, dan bawa balon.',
     instruction: '4 anggota bergantian: (1) balap karung 20m, (2) bakiak bambu 15m, (3) bawa balon di antara dada tanpa tangan 10m, (4) lari gawang 20m. Estafet dengan tos tangan. Skor berdasarkan waktu: <3 menit = 100, <4 menit = 80, <5 menit = 60.',
   },
   rajawali: {
-    position: 'POS 5', name: 'Pos Rajawali', gameType: 'Photo Mission', color: '#9634e8', location: 'Pantai Petualang', duration: 20, maxPoints: 100,
+    position: 'POS 5', name: 'Pos Rajawali', gameType: 'Photo Mission', color: '#9333ea', location: 'Bukit Panorama', duration: 20, maxPoints: 100,
     description: 'Misi foto: tim mencari dan berfoto di 5 spot sesuai daftar instruksi panitia.',
     instruction: 'Temukan lima spot sesuai daftar, lalu ambil foto bersama tim sebagai bukti penyelesaian misi. Waktu 20 menit per tim.',
   },
   nusantara: {
-    position: 'POS 6', name: 'Pos Nusantara', gameType: 'Treasure Hunt', color: '#d69200', location: 'Area Perkemahan', duration: 25, maxPoints: 100,
-    description: 'Pos pamungkas: treasure hunt mencari clue tersembunyi yang disiapkan panitia.',
-    instruction: 'Ikuti petunjuk yang ditemukan di setiap titik sampai mendapatkan harta karun terakhir. Waktu 25 menit per tim.',
+    position: 'POS 6', name: 'Pos Nusantara', gameType: 'Treasure Hunt', color: '#d99100', location: 'Area Perkemahan', duration: 25, maxPoints: 120,
+    description: 'Pos pamungkas: treasure hunt mencari clue tersembunyi yang disiapkan panitia di area perkemahan.',
+    instruction: 'Panitia menyembunyikan 5 kartu clue di area perkemahan. Tiap clue berisi teka-teki menuju clue berikutnya. Tim harus menemukan semua dan menjawab teka-teki pada clue terakhir. Skor: 20 poin per clue + 20 poin jika menemukan harta akhir. Waktu 25 menit.',
   },
 };
 
@@ -62,7 +62,17 @@ type Team = {
 type BackendRoute = {
   id: string;
   position: number;
+  name: string;
+  gameType: string;
+  description: string;
+  instruction: string;
+  location: string;
+  duration: number;
+  maxPoints: number;
+  difficulty: string;
 };
+
+type RouteDraft = Omit<BackendRoute, 'id' | 'position'>;
 
 type Score = {
   id: string;
@@ -84,10 +94,28 @@ function DetailIcon({ type }: { type: 'target' | 'pin' | 'clock' | 'check' | 'up
 }
 
 export default function RouteDetailPage() {
-  const { loading, isAuthenticated } = useAuth();
+  const { loading, isAuthenticated, user } = useAuth();
   const router = useRouter();
   const params = useParams<{ id: string }>();
-  const route = routeDetails[params.id] ?? routeDetails.garuda;
+  const routeTemplate = routeDetails[params.id] ?? routeDetails.garuda;
+  const [backendRoute, setBackendRoute] = useState<BackendRoute | null>(null);
+  const positionTemplate = backendRoute
+    ? Object.values(routeDetails).find((item) => item.position === `POS ${backendRoute.position}`) ?? routeTemplate
+    : routeTemplate;
+  const route = backendRoute && backendRoute.position >= 2 && backendRoute.position <= 6 ? {
+    ...positionTemplate,
+    position: `POS ${backendRoute.position}`,
+  } : backendRoute ? {
+    ...routeTemplate,
+    position: `POS ${backendRoute.position}`,
+    name: backendRoute.name,
+    gameType: backendRoute.gameType,
+    description: backendRoute.description,
+    instruction: backendRoute.instruction || routeTemplate.instruction,
+    location: backendRoute.location,
+    duration: backendRoute.duration,
+    maxPoints: backendRoute.maxPoints,
+  } : routeTemplate;
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeam, setSelectedTeam] = useState('');
   const [routeId, setRouteId] = useState('');
@@ -100,6 +128,10 @@ export default function RouteDetailPage() {
   const [scores, setScores] = useState<Score[]>([]);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
+  const [editingRoute, setEditingRoute] = useState(false);
+  const [routeDraft, setRouteDraft] = useState<RouteDraft | null>(null);
+  const [routeSaving, setRouteSaving] = useState(false);
+  const [routeEditMessage, setRouteEditMessage] = useState('');
 
   useEffect(() => {
     if (!loading && !isAuthenticated) router.push('/login');
@@ -111,19 +143,21 @@ export default function RouteDetailPage() {
     const loadTeams = async () => {
       try {
         const [teamsResponse, routesResponse] = await Promise.all([
-          fetch(`${API_URL}/api/teams`, { cache: 'no-store', credentials: 'include' }),
-          fetch(`${API_URL}/api/routes`, { cache: 'no-store', credentials: 'include' }),
+          fetch(`${API_URL}/api/teams`, { cache: 'force-cache', credentials: 'include' }),
+          fetch(`${API_URL}/api/routes`, { cache: 'force-cache', credentials: 'include' }),
         ]);
         if (!teamsResponse.ok || !routesResponse.ok) return;
 
         const payload: { data?: Array<{ id: string; name: string; initials: string }> } = await teamsResponse.json();
         const routesPayload: { data?: BackendRoute[] } = await routesResponse.json();
-        const currentRoute = routesPayload.data?.find((item) => item.position === Number(route.position.replace('POS ', '')));
+        const currentRoute = routesPayload.data?.find((item) => item.id === params.id)
+          ?? routesPayload.data?.find((item) => item.position === Number(routeTemplate.position.replace('POS ', '')));
         setRouteId(currentRoute?.id || '');
         if (currentRoute) {
+          setBackendRoute(currentRoute);
           const [checkinsResponse, scoresResponse] = await Promise.all([
-            fetch(`${API_URL}/api/checkins?routeId=${currentRoute.id}`, { cache: 'no-store', credentials: 'include' }),
-            fetch(`${API_URL}/api/scores?routeId=${currentRoute.id}`, { cache: 'no-store', credentials: 'include' }),
+            fetch(`${API_URL}/api/checkins?routeId=${currentRoute.id}`, { cache: 'force-cache', credentials: 'include' }),
+            fetch(`${API_URL}/api/scores?routeId=${currentRoute.id}`, { cache: 'force-cache', credentials: 'include' }),
           ]);
           if (checkinsResponse.ok) {
             const checkinsPayload: { data?: Array<{ teamId: string }> } = await checkinsResponse.json();
@@ -149,7 +183,33 @@ export default function RouteDetailPage() {
     };
 
     loadTeams();
-  }, [loading, isAuthenticated]);
+  }, [loading, isAuthenticated, params.id, routeTemplate.position]);
+
+  const handleSaveRoute = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!routeId || !routeDraft) return;
+
+    setRouteSaving(true);
+    setRouteEditMessage('');
+    try {
+      const response = await fetch(`${API_URL}/api/routes/${routeId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(routeDraft),
+      });
+      const payload: { data?: BackendRoute; message?: string } = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.data) throw new Error(payload.message || 'Perubahan pos gagal disimpan.');
+
+      setBackendRoute(payload.data);
+      setEditingRoute(false);
+      setRouteEditMessage('Perubahan pos berhasil disimpan.');
+    } catch (error) {
+      setRouteEditMessage(error instanceof Error ? error.message : 'Perubahan pos gagal disimpan.');
+    } finally {
+      setRouteSaving(false);
+    }
+  };
 
   const toggleCheckIn = async (teamId: string) => {
     if (!routeId) return;
@@ -219,7 +279,7 @@ export default function RouteDetailPage() {
       setNote('');
       setPhoto(null);
       setPhotoPreview('');
-      const scoresResponse = await fetch(`${API_URL}/api/scores?routeId=${routeId}`, { cache: 'no-store', credentials: 'include' });
+      const scoresResponse = await fetch(`${API_URL}/api/scores?routeId=${routeId}`, { cache: 'force-cache', credentials: 'include' });
       if (scoresResponse.ok) setScores((await scoresResponse.json()).data ?? []);
     } catch (error) {
       setSaveMessage(error instanceof Error ? error.message : 'Skor gagal disimpan');
@@ -240,7 +300,24 @@ export default function RouteDetailPage() {
       <main className="page-main route-detail-main" style={styles.mainContent}>
         <div className="mobile-site-header"><Logo light className="mobile-dashboard-logo" /></div>
         <section className="route-detail-hero" style={{ ...styles.hero, background: route.color }}>
-          <Link className="route-detail-back" href="/fasilitator/routes" style={styles.backLink}>← Route</Link>
+          <div style={styles.heroActions}>
+            <Link className="route-detail-back" href="/fasilitator/routes" style={styles.backLink}>← Route</Link>
+            {user?.role === 'FACILITATOR' ? <button type="button" onClick={() => {
+              setRouteDraft({
+                name: route.name,
+                gameType: route.gameType,
+                description: route.description,
+                instruction: route.instruction,
+                location: route.location,
+                duration: route.duration,
+                maxPoints: route.maxPoints,
+                difficulty: backendRoute?.difficulty || 'Mudah',
+              });
+              setRouteEditMessage('');
+              setEditingRoute((current) => !current);
+            }} style={styles.editRouteButton}>{editingRoute ? 'Tutup Edit' : 'Edit Pos'}</button> : null}
+          </div>
+          {routeEditMessage && !editingRoute ? <div role="status" style={styles.routeEditStatus}>{routeEditMessage}</div> : null}
           <div style={styles.heroTitleRow}>
             <div className="route-detail-hero-icon" style={styles.heroIcon}><DetailIcon type="target" /></div>
             <div><div className="route-detail-position" style={styles.position}>{route.position}</div><h1 className="route-detail-title" style={styles.title}>{route.name}</h1></div>
@@ -252,6 +329,27 @@ export default function RouteDetailPage() {
             <span><DetailIcon type="target" /> Maks {route.maxPoints} poin</span>
           </div>
         </section>
+
+        {editingRoute && routeDraft ? <form onSubmit={handleSaveRoute} style={styles.routeEditPanel}>
+          <div style={styles.routeEditHeader}>
+            <div><h2 style={styles.routeEditTitle}>Edit Informasi Pos</h2><p style={styles.routeEditDescription}>Perubahan langsung digunakan pada pos ini.</p></div>
+            <div style={styles.routeEditActions}>
+              <button type="button" onClick={() => setEditingRoute(false)} style={styles.routeCancelButton}>Batal</button>
+              <button type="submit" disabled={routeSaving || !routeId} style={styles.routeSaveButton}>{routeSaving ? 'Menyimpan...' : 'Simpan Perubahan'}</button>
+            </div>
+          </div>
+          <div style={styles.routeEditGrid}>
+            <label style={styles.routeEditLabel}>Nama Pos<input required minLength={2} value={routeDraft.name} onChange={(event) => setRouteDraft({ ...routeDraft, name: event.target.value })} style={styles.routeEditInput} /></label>
+            <label style={styles.routeEditLabel}>Jenis Mini Game<input required minLength={2} value={routeDraft.gameType} onChange={(event) => setRouteDraft({ ...routeDraft, gameType: event.target.value })} style={styles.routeEditInput} /></label>
+            <label style={styles.routeEditLabel}>Lokasi<input required minLength={2} value={routeDraft.location} onChange={(event) => setRouteDraft({ ...routeDraft, location: event.target.value })} style={styles.routeEditInput} /></label>
+            <label style={styles.routeEditLabel}>Tingkat Kesulitan<select value={routeDraft.difficulty} onChange={(event) => setRouteDraft({ ...routeDraft, difficulty: event.target.value })} style={styles.routeEditInput}><option>Mudah</option><option>Sedang</option><option>Sulit</option></select></label>
+            <label style={styles.routeEditLabel}>Durasi (menit)<input required type="number" min="1" step="1" value={routeDraft.duration} onChange={(event) => setRouteDraft({ ...routeDraft, duration: Number(event.target.value) })} style={styles.routeEditInput} /></label>
+            <label style={styles.routeEditLabel}>Skor Maksimum<input required type="number" min="0" step="1" value={routeDraft.maxPoints} onChange={(event) => setRouteDraft({ ...routeDraft, maxPoints: Number(event.target.value) })} style={styles.routeEditInput} /></label>
+            <label style={styles.routeEditLabel}>Deskripsi<textarea required minLength={2} value={routeDraft.description} onChange={(event) => setRouteDraft({ ...routeDraft, description: event.target.value })} style={styles.routeEditTextarea} /></label>
+            <label style={styles.routeEditLabel}>Instruksi Permainan<textarea required minLength={2} value={routeDraft.instruction} onChange={(event) => setRouteDraft({ ...routeDraft, instruction: event.target.value })} style={styles.routeEditTextarea} /></label>
+          </div>
+          {routeEditMessage ? <p role="alert" style={styles.routeEditError}>{routeEditMessage}</p> : null}
+        </form> : null}
 
         <div className="route-detail-content" style={styles.contentGrid}>
           <section>
@@ -317,13 +415,28 @@ const styles: Record<string, React.CSSProperties> = {
   appShell: { display: 'flex', height: '100vh', overflow: 'hidden', background: '#f7f5f2', color: '#202b29' },
   mainContent: { flex: 1, minWidth: 0, height: '100vh', overflowY: 'auto' },
   hero: { color: '#fff', padding: '28px 54px 32px', minHeight: 245 },
-  backLink: { display: 'inline-block', color: '#fff', textDecoration: 'none', fontSize: 16, marginBottom: 26 },
+  heroActions: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 26 },
+  backLink: { display: 'inline-block', color: '#fff', textDecoration: 'none', fontSize: 16 },
+  editRouteButton: { border: '1px solid rgba(255,255,255,0.75)', borderRadius: 9, background: 'rgba(255,255,255,0.14)', color: '#fff', padding: '9px 14px', fontSize: 14, fontWeight: 700, cursor: 'pointer' },
+  routeEditStatus: { marginTop: -16, marginBottom: 14, fontSize: 14, fontWeight: 600 },
   heroTitleRow: { display: 'flex', alignItems: 'center', gap: 14 },
   heroIcon: { width: 54, height: 54, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.18)' },
   position: { fontSize: 14, fontWeight: 700, letterSpacing: '0.08em', opacity: 0.9 },
   title: { margin: '4px 0 0', fontSize: 38, lineHeight: 1.05, letterSpacing: '-0.04em', fontWeight: 900 },
   heroMeta: { display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap', marginTop: 28, fontSize: 16 },
   gamePill: { display: 'inline-flex', alignItems: 'center', gap: 7, background: '#fff4e8', color: '#c95d0a', borderRadius: 999, padding: '7px 13px', fontWeight: 700 },
+  routeEditPanel: { margin: '26px 54px 0', maxWidth: 1240, padding: 24, background: '#fffdfb', border: '1px solid #e1dbd4', borderRadius: 14 },
+  routeEditHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, marginBottom: 20 },
+  routeEditTitle: { margin: 0, fontSize: 21, fontWeight: 800 },
+  routeEditDescription: { margin: '6px 0 0', color: '#766d65', fontSize: 14 },
+  routeEditActions: { display: 'flex', flexWrap: 'wrap', gap: 8 },
+  routeCancelButton: { border: '1px solid #d9d2ca', borderRadius: 9, background: '#fffdfb', color: '#514a44', padding: '10px 14px', fontSize: 14, fontWeight: 700, cursor: 'pointer' },
+  routeSaveButton: { border: 'none', borderRadius: 9, background: '#285b43', color: '#fff', padding: '10px 14px', fontSize: 14, fontWeight: 700, cursor: 'pointer' },
+  routeEditGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '4px 18px' },
+  routeEditLabel: { display: 'flex', flexDirection: 'column', gap: 7, marginTop: 12, fontSize: 14, fontWeight: 700, color: '#393632' },
+  routeEditInput: { width: '100%', boxSizing: 'border-box', border: '1px solid #e0dad3', borderRadius: 9, padding: '11px 12px', background: '#fff', color: '#393632', fontSize: 15 },
+  routeEditTextarea: { width: '100%', minHeight: 100, boxSizing: 'border-box', resize: 'vertical', border: '1px solid #e0dad3', borderRadius: 9, padding: 12, background: '#fff', color: '#393632', fontSize: 14, lineHeight: 1.5 },
+  routeEditError: { margin: '14px 0 0', color: '#a33125', fontSize: 14, fontWeight: 600 },
   contentGrid: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 390px', gap: 34, padding: '38px 54px 60px', maxWidth: 1240 },
   sectionTitle: { margin: '0 0 12px', fontSize: 23, fontWeight: 800 },
   description: { margin: '0 0 26px', color: '#6b625b', fontSize: 17, lineHeight: 1.6 },

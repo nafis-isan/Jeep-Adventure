@@ -29,14 +29,13 @@ export default function ScoreboardPage() {
   useEffect(() => {
     if (loading || !isAuthenticated) return;
 
-    let active = true;
     const loadRanking = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/leaderboard`, { cache: 'no-store', credentials: 'include' });
+        const response = await fetch(`${API_URL}/api/leaderboard`, { cache: 'force-cache', credentials: 'include' });
         if (!response.ok) return;
 
         const payload: { data?: Array<{ name: string; initials: string; totalPoints: number; completedGames?: number }> } = await response.json();
-        if (!active || !payload.data) return;
+        if (!payload.data) return;
 
         const colors: Record<string, string> = {
           'Garuda Offroad': '#2f9b72',
@@ -56,12 +55,6 @@ export default function ScoreboardPage() {
     };
 
     loadRanking();
-    const refreshTimer = window.setInterval(loadRanking, 5000);
-
-    return () => {
-      active = false;
-      window.clearInterval(refreshTimer);
-    };
   }, [loading, isAuthenticated]);
 
   if (loading || !isAuthenticated) return null;

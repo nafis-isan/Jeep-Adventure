@@ -58,9 +58,12 @@ model Route {
   name           String
   gameType       String
   description    String
+  instruction    String   @default("") @db.Text
   location       String
   duration       Int
+  maxPoints      Int      @default(100)
   difficulty     String
+  color          String   @default("#147b73")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   Score          Score[]
