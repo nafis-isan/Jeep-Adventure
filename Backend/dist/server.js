@@ -7,6 +7,7 @@ import routeRoutes from './routes/routes.js';
 import scoreRoutes from './routes/scores.js';
 import checkinRoutes from './routes/checkins.js';
 import leaderboardRoutes from './routes/leaderboard.js';
+import experienceRoutes from './routes/experiences.js';
 import { env } from './config/env.js';
 const app = express();
 const allowedOrigins = [
@@ -37,6 +38,7 @@ app.use('/api/routes', routeRoutes);
 app.use('/api/scores', scoreRoutes);
 app.use('/api/checkins', checkinRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/experiences', experienceRoutes);
 app.listen(env.port, () => {
     console.log(`Backend running on http://localhost:${env.port}`);
 });

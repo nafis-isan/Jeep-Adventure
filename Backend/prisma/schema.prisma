@@ -26,6 +26,7 @@ model User {
   role         UserRole @default(CUSTOMER)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  Experience   Experience[]
 }
 
 model Team {
@@ -39,6 +40,7 @@ model Team {
   TeamMember  TeamMember[]
   Score       Score[]
   CheckIn     CheckIn[]
+  Experience  Experience[]
 }
 
 model TeamMember {
@@ -63,6 +65,27 @@ model Route {
   updatedAt      DateTime @updatedAt
   Score          Score[]
   CheckIn        CheckIn[]
+  Experience     Experience[]
+}
+
+model Experience {
+  id        String   @id @default(uuid())
+  userId    String
+  teamId    String
+  routeId   String
+  story     String   @db.Text
+  rating    Int
+  mediaData String?  @db.Text
+  mediaType String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  route     Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([teamId])
+  @@index([routeId])
 }
 
 model Score {

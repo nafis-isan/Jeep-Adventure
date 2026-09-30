@@ -1,0 +1,2 @@
+-- Route content fields are already present in the initial schema migration.
+-- This migration is retained to keep the migration history complete.

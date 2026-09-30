@@ -91,8 +91,6 @@ export default function LoginPage() {
           {loading ? 'Logging in...' : 'Log in'}
         </button>
       </form>
-
-      <p style={styles.signupText}>Akun dibuat oleh fasilitator.</p>
     </div>
   );
 }

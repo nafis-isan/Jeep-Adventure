@@ -92,7 +92,7 @@ button, a, input {
     height: 100%;
     margin: 0 !important;
     display: grid !important;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 0 !important;
     align-items: stretch;
   }
@@ -314,6 +314,72 @@ button, a, input {
     margin-left: 52px;
     padding: 9px 12px !important;
     font-size: 11px !important;
+  }
+
+  .experience-main {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-bottom: calc(78px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .experience-main .mobile-site-header {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .experience-main .experience-hero {
+    padding: 26px 20px 32px !important;
+  }
+
+  .experience-main .experience-hero h1 {
+    font-size: 34px !important;
+    line-height: 1.02 !important;
+  }
+
+  .experience-main .experience-hero p {
+    font-size: 13px !important;
+  }
+
+  .experience-main .experience-eyebrow {
+    font-size: 9px !important;
+    padding: 6px 9px !important;
+  }
+
+  .experience-main .experience-layout {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    margin-top: -8px !important;
+    padding: 0 14px !important;
+  }
+
+  .experience-main .experience-layout > section,
+  .experience-main .featuredCard {
+    border-radius: 12px !important;
+    padding: 15px !important;
+  }
+
+  .experience-main .experience-field-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+  }
+
+  .experience-main .featuredCard {
+    grid-template-columns: 82px 1fr !important;
+    gap: 10px !important;
+    margin: 12px 14px 0 !important;
+  }
+
+  .experience-main .featuredImage {
+    height: 64px !important;
+  }
+
+  .experience-main .featuredTitle {
+    font-size: 13px !important;
+  }
+
+  .experience-main .galleryFooter {
+    align-items: flex-start !important;
+    flex-direction: column !important;
   }
 
   .routes-main .pageHeader,
