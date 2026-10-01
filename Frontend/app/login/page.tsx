@@ -46,17 +46,6 @@ export default function LoginPage() {
       <p style={styles.subtitle}>Log in to your account</p>
 
       <form style={styles.card} onSubmit={handleSubmit}>
-        <button type="button" style={styles.googleButton}>
-          <span style={{ fontSize: 18 }}>G</span>
-          <span>Continue with Google</span>
-        </button>
-
-        <div style={styles.separatorWrap}>
-          <div style={styles.separatorLine} />
-          <span style={styles.separatorText}>OR</span>
-          <div style={styles.separatorLine} />
-        </div>
-
         {error ? <div style={styles.error}>{error}</div> : null}
 
         <label style={styles.fieldLabel}>Email</label>
@@ -140,37 +129,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 18,
     padding: 18,
     boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.2)',
-  },
-  googleButton: {
-    width: '100%',
-    border: '1px solid #d2d4d3',
-    borderRadius: 10,
-    background: '#f5f5f4',
-    color: '#1b2b2a',
-    fontWeight: 600,
-    padding: '14px 18px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    cursor: 'pointer',
-    fontSize: 16,
-  },
-  separatorWrap: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 16,
-    margin: '18px 0',
-    color: '#6d7b78',
-    fontSize: 13,
-    fontWeight: 700,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase',
-  },
-  separatorLine: {
-    flex: 1,
-    height: 1,
-    background: '#d9d4d0',
   },
   fieldLabel: {
     display: 'block',

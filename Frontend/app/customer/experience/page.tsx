@@ -49,6 +49,7 @@ export default function CustomerExperiencePage() {
   const [mediaType, setMediaType] = useState('');
   const [filter, setFilter] = useState<'all' | 'photo'>('all');
   const [notice, setNotice] = useState('');
+  const [instagramLinkVisible, setInstagramLinkVisible] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -105,15 +106,47 @@ export default function CustomerExperiencePage() {
     reader.readAsDataURL(file);
   };
 
-  const shareToInstagram = async (experience: Experience) => {
-    const caption = `Petualangan Jeep bersama tim ${experience.team.name}! ${experience.story}\n\n#JeepAdventure #OffroadTeamBuilding #TeamBuilding`;
+  const createCaption = (teamName: string, experienceStory: string) =>
+    `Petualangan Jeep bersama tim ${teamName}! ${experienceStory}\n\n@jeepadventuregarut\n\n#JeepAdventure #OffroadTeamBuilding #TeamBuilding`;
+
+  const copyCaption = (caption: string): Promise<boolean> => {
     try {
-      await navigator.clipboard?.writeText(caption);
+      return navigator.clipboard?.writeText(caption).then(() => true, () => false) ?? Promise.resolve(false);
     } catch {
-      // Clipboard is unavailable on some non-secure Windows origins.
+      return Promise.resolve(false);
     }
-    window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
-    setNotice('Cerita tersimpan. Caption disalin jika browser mengizinkan, lalu lanjutkan posting di Instagram.');
+  };
+
+  const copyInstagramMention = async () => {
+    const copied = await copyCaption('@jeepadventuregarut');
+    setNotice(copied
+      ? '@jeepadventuregarut disalin. Tempel di Story atau tambahkan melalui stiker Mention agar akunnya tertaut.'
+      : 'Handle tidak dapat disalin otomatis. Salin manual: @jeepadventuregarut');
+  };
+
+  const shareToInstagram = async (experience: Experience, instagramWindow?: Window | null, captionCopy?: Promise<boolean>) => {
+    const caption = createCaption(experience.team.name, experience.story);
+    const copyResult = captionCopy ?? copyCaption(caption);
+    if (experience.mediaData) {
+      const extension = experience.mediaType?.split('/')[1] || 'jpg';
+      const downloadLink = document.createElement('a');
+      downloadLink.href = experience.mediaData;
+      downloadLink.download = `jeep-adventure-story.${extension}`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      downloadLink.remove();
+    }
+    const instagramUrl = 'https://www.instagram.com/';
+    if (instagramWindow) {
+      instagramWindow.location.href = instagramUrl;
+    } else {
+      window.open(instagramUrl, '_blank', 'noopener,noreferrer');
+    }
+    const captionCopied = await copyResult;
+    setInstagramLinkVisible(true);
+    setNotice(experience.mediaData
+      ? `Pengalaman tersimpan. Foto ${captionCopied ? 'diunduh dan caption disalin.' : 'diunduh, tetapi caption tidak dapat disalin otomatis.'} Buat Story di Instagram, unggah foto, tempel caption, lalu tambahkan stiker mention @jeepadventuregarut.`
+      : `Pengalaman tersimpan, tetapi belum ada foto untuk diunduh. ${captionCopied ? 'Caption disalin.' : 'Caption tidak dapat disalin otomatis.'} Buat Story di Instagram dan tambahkan stiker mention @jeepadventuregarut.`);
   };
 
   const submitExperience = async (event: FormEvent) => {
@@ -122,6 +155,10 @@ export default function CustomerExperiencePage() {
       setNotice('Pilih tim, rute, dan isi cerita terlebih dahulu.');
       return;
     }
+    setInstagramLinkVisible(false);
+    const instagramWindow = window.open('about:blank', '_blank');
+    const selectedTeamName = teams.find((team) => team.id === teamId)?.name || 'tim';
+    const captionCopy = copyCaption(createCaption(selectedTeamName, story.trim()));
     setSaving(true);
     setNotice('Mengirim pengalaman...');
     try {
@@ -133,6 +170,7 @@ export default function CustomerExperiencePage() {
       });
       const payload: { data?: Experience; message?: string } = await response.json();
       if (!response.ok || !payload.data) {
+        instagramWindow?.close();
         setNotice(payload.message || 'Pengalaman gagal dikirim.');
         return;
       }
@@ -141,9 +179,9 @@ export default function CustomerExperiencePage() {
       setRating(5);
       setMediaData('');
       setMediaType('');
-      setNotice('Pengalaman berhasil disimpan ke database.');
-      await shareToInstagram(payload.data);
+      await shareToInstagram(payload.data, instagramWindow, captionCopy);
     } catch {
+      instagramWindow?.close();
       setNotice('Server tidak dapat dihubungi. Coba lagi nanti.');
     } finally {
       setSaving(false);
@@ -157,26 +195,26 @@ export default function CustomerExperiencePage() {
       <CustomerSidebar />
       <main className="page-main experience-main" style={styles.mainContent}>
         <div className="mobile-site-header"><Logo light className="mobile-dashboard-logo" /></div>
-        <header style={styles.hero}>
-          <div style={styles.heroInner}><div style={styles.badge}><span style={{ color: '#e86d3a' }}>✦</span> OFFROAD · TEAM BUILDING · MINI GAMES</div><div style={styles.heroRow}><div><h1 style={styles.heroTitle}>Petualangan Lebih Seru Jika Dibagikan.</h1><p style={styles.heroText}>Dengarkan cerita tim lain, bagikan keseruanmu, dan beri inspirasi untuk petualangan berikutnya.</p></div><div style={styles.eventMeta}><span>⌖ {selectedRoute?.location || selectedRoute?.name || 'Rute aktif'}</span><span>•</span><span style={{ color: '#9ae6b4' }}>✓ Event Aktif</span></div></div></div>
+        <header className="experience-hero" style={styles.hero}>
+          <div style={styles.heroInner}><div className="experience-eyebrow" style={styles.badge}><span style={{ color: '#e86d3a' }}>✦</span> OFFROAD · TEAM BUILDING · MINI GAMES</div><div className="experience-hero-row" style={styles.heroRow}><div><h1 style={styles.heroTitle}>Petualangan Lebih Seru Jika Dibagikan.</h1><p style={styles.heroText}>Dengarkan cerita tim lain, bagikan keseruanmu, dan beri inspirasi untuk petualangan berikutnya.</p></div><div className="experience-event-meta" style={styles.eventMeta}><span>⌖ {selectedRoute?.location || selectedRoute?.name || 'Rute aktif'}</span><span>•</span><span style={{ color: '#9ae6b4' }}>✓ Event Aktif</span></div></div></div>
         </header>
 
-        <div style={styles.content}>
-          <div style={styles.topGrid}>
-            <section style={styles.formCard}><div style={styles.sectionHeading}><div><h2 style={styles.sectionTitle}>Formulir Berbagi Cerita</h2><p style={styles.sectionHint}>Bagikan momen yang paling berkesan dari perjalananmu.</p></div><span style={styles.newBadge}>Post Baru</span></div>
+        <div className="experience-content" style={styles.content}>
+          <div className="experience-layout" style={styles.topGrid}>
+            <section style={styles.formCard}><div className="experience-section-heading" style={styles.sectionHeading}><div><h2 style={styles.sectionTitle}>Formulir Berbagi Cerita</h2><p style={styles.sectionHint}>Bagikan momen yang paling berkesan dari perjalananmu.</p></div><span style={styles.newBadge}>Post Baru</span></div>
               <form onSubmit={submitExperience}>
-                <div style={styles.fieldGrid}><label style={styles.label}>Rute &amp; Game<select value={routeId} onChange={(event) => setRouteId(event.target.value)} style={styles.input}><option value="">Pilih rute</option>{routes.map((route) => <option value={route.id} key={route.id}>{route.name} · {route.gameType}</option>)}</select></label><label style={styles.label}>Nama Tim<select value={teamId} onChange={(event) => setTeamId(event.target.value)} style={styles.input}><option value="">Pilih tim</option>{teams.map((team) => <option value={team.id} key={team.id}>{team.name}</option>)}</select></label></div>
+                <div className="experience-field-grid" style={styles.fieldGrid}><label style={styles.label}>Rute &amp; Game<select value={routeId} onChange={(event) => setRouteId(event.target.value)} style={styles.input}><option value="">Pilih rute</option>{routes.map((route) => <option value={route.id} key={route.id}>{route.name} · {route.gameType}</option>)}</select></label><label style={styles.label}>Nama Tim<select value={teamId} onChange={(event) => setTeamId(event.target.value)} style={styles.input}><option value="">Pilih tim</option>{teams.map((team) => <option value={team.id} key={team.id}>{team.name}</option>)}</select></label></div>
                 <div style={styles.label}>Rating Bintang (1-5)<div style={styles.ratingRow}>{[1, 2, 3, 4, 5].map((value) => <button type="button" aria-label={`Beri rating ${value} dari 5`} key={value} onClick={() => setRating(value)} style={{ ...styles.starButton, color: value <= rating ? '#f59e0b' : '#cbd5e0' }}><Icon name="star" /></button>)}<span style={styles.ratingValue}>{rating.toFixed(1)}</span></div></div>
                 <label style={styles.label}>Cerita Keseruan<textarea value={story} onChange={(event) => setStory(event.target.value)} maxLength={280} rows={3} required placeholder="Bagikan keseruanmu di sini..." style={styles.textarea} /></label>
-                <div style={styles.formBottom}><label style={styles.uploadButton}><Icon name="upload" /> Unggah<input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageUpload} hidden /></label>{mediaData ? <img src={mediaData} alt="Preview" style={styles.thumb} /> : <span style={styles.uploadHint}>Foto JPG/PNG/WEBP maksimal 5 MB</span>}<button type="submit" disabled={saving} style={styles.submitButton}>{saving ? 'Mengirim...' : 'Kirim Pengalaman'} <Icon name="send" /></button></div>
-                {notice ? <p role="status" style={styles.notice}>{notice}</p> : null}
+                <div className="experience-form-bottom" style={styles.formBottom}><label style={styles.uploadButton}><Icon name="upload" /> Unggah<input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageUpload} hidden /></label>{mediaData ? <img src={mediaData} alt="Preview" style={styles.thumb} /> : <span style={styles.uploadHint}>Foto JPG/PNG/WEBP maksimal 5 MB</span>}<button type="submit" disabled={saving} style={styles.submitButton}>{saving ? 'Mengirim...' : 'Kirim Pengalaman'} <Icon name="send" /></button></div>
+                {notice ? <p role="status" style={styles.notice}>{notice}{instagramLinkVisible ? <> <a href="https://www.instagram.com/jeepadventuregarut/" target="_blank" rel="noreferrer" style={{ color: '#153828', fontWeight: 800 }}>Buka Instagram</a><button type="button" onClick={copyInstagramMention} style={{ marginLeft: 8, padding: 0, border: 0, background: 'transparent', color: '#153828', fontWeight: 800, textDecoration: 'underline', cursor: 'pointer' }}>Salin @jeepadventuregarut</button></> : null}</p> : null}
               </form>
             </section>
 
-            <section style={styles.galleryCard}><div style={styles.sectionHeading}><div style={styles.galleryHeading}><h2 style={styles.sectionTitle}>Galeri Pengalaman Tim</h2><span style={styles.countBadge}>{experiences.length} Item</span></div><div style={styles.tabs}><button type="button" onClick={() => setFilter('all')} style={filter === 'all' ? styles.activeTab : styles.tab}>Semua</button><button type="button" onClick={() => setFilter('photo')} style={filter === 'photo' ? styles.activeTab : styles.tab}>Foto</button></div></div>{visibleExperiences.length === 0 ? <div style={styles.emptyGallery}>Belum ada pengalaman tersimpan di database.</div> : <div style={styles.galleryGrid}>{visibleExperiences.map((item) => <article key={item.id} style={styles.galleryItem}>{item.mediaData ? <img src={item.mediaData} alt="Momen tim" style={styles.galleryImage} /> : <div style={{ ...styles.galleryImage, ...styles.placeholder }}>✦</div>}<div style={styles.galleryBody}><h3 style={styles.galleryTitle}>{item.story}</h3><div style={styles.galleryMeta}><span>{item.team.name}</span><span style={styles.ratingText}>★ {item.rating.toFixed(1)}</span></div><button type="button" onClick={() => shareToInstagram(item)} style={styles.cardShare}>Bagikan</button></div></article>)}</div>}</section>
+            <section style={styles.galleryCard}><div className="experience-section-heading" style={styles.sectionHeading}><div className="experience-gallery-heading" style={styles.galleryHeading}><h2 style={styles.sectionTitle}>Galeri Pengalaman Tim</h2><span style={styles.countBadge}>{experiences.length} Item</span></div><div style={styles.tabs}><button type="button" onClick={() => setFilter('all')} style={filter === 'all' ? styles.activeTab : styles.tab}>Semua</button><button type="button" onClick={() => setFilter('photo')} style={filter === 'photo' ? styles.activeTab : styles.tab}>Foto</button></div></div>{visibleExperiences.length === 0 ? <div style={styles.emptyGallery}>Belum ada pengalaman tersimpan di database.</div> : <div className="experience-gallery-grid" style={styles.galleryGrid}>{visibleExperiences.map((item) => <article key={item.id} style={styles.galleryItem}>{item.mediaData ? <img src={item.mediaData} alt="Momen tim" style={styles.galleryImage} /> : <div style={{ ...styles.galleryImage, ...styles.placeholder }}>✦</div>}<div style={styles.galleryBody}><h3 style={styles.galleryTitle}>{item.story}</h3><div style={styles.galleryMeta}><span>{item.team.name}</span><span style={styles.ratingText}>★ {item.rating.toFixed(1)}</span></div><button type="button" onClick={() => shareToInstagram(item)} style={styles.cardShare}>Bagikan</button></div></article>)}</div>}</section>
           </div>
 
-          <div style={styles.bottomGrid}><div style={styles.metricsGrid}><Metric icon="flag" value={routes.length} label="Titik Pemberhentian" /><Metric icon="users" value={teams.length} label="Tim Peserta" /><Metric icon="check" value={experiences.length} label="Cerita Tersimpan" /><Metric icon="award" value={topExperience?.rating.toFixed(1) || '0'} label="Rating Terbaru" /></div><section style={styles.featuredCard}><div style={styles.featuredVisual}>{topExperience?.mediaData ? <img src={topExperience.mediaData} alt="Cerita pilihan" style={styles.featuredImg} /> : <span>✦</span>}</div><div><span style={styles.featuredLabel}>CERITA TERBARU</span><h2 style={styles.featuredTitle}>{topExperience?.story || 'Setiap rute punya cerita yang layak dikenang.'}</h2><p style={styles.featuredText}>{topExperience ? `— ${topExperience.user.name}, ${topExperience.team.name}` : 'Mulai bagikan momen timmu dan tampilkan di sini.'}</p>{topExperience ? <button type="button" onClick={() => shareToInstagram(topExperience)} style={styles.storyButton}>Bagikan ke Instagram</button> : null}</div></section></div>
+          <div className="experience-bottom-layout" style={styles.bottomGrid}><div style={styles.metricsGrid}><Metric icon="flag" value={routes.length} label="Titik Pemberhentian" /><Metric icon="users" value={teams.length} label="Tim Peserta" /><Metric icon="check" value={experiences.length} label="Cerita Tersimpan" /><Metric icon="award" value={topExperience?.rating.toFixed(1) || '0'} label="Rating Terbaru" /></div><section className="experience-featured-card" style={styles.featuredCard}><div style={styles.featuredVisual}>{topExperience?.mediaData ? <img src={topExperience.mediaData} alt="Cerita pilihan" style={styles.featuredImg} /> : <span>✦</span>}</div><div><span style={styles.featuredLabel}>CERITA TERBARU</span><h2 style={styles.featuredTitle}>{topExperience?.story || 'Setiap rute punya cerita yang layak dikenang.'}</h2><p style={styles.featuredText}>{topExperience ? `— ${topExperience.user.name}, ${topExperience.team.name}` : 'Mulai bagikan momen timmu dan tampilkan di sini.'}</p>{topExperience ? <button type="button" onClick={() => shareToInstagram(topExperience)} style={styles.storyButton}>Bagikan ke Instagram</button> : null}</div></section></div>
 
         </div>
       </main>

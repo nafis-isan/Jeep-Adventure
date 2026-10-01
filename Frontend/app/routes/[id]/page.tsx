@@ -330,23 +330,23 @@ export default function RouteDetailPage() {
           </div>
         </section>
 
-        {editingRoute && routeDraft ? <form onSubmit={handleSaveRoute} style={styles.routeEditPanel}>
-          <div style={styles.routeEditHeader}>
-            <div><h2 style={styles.routeEditTitle}>Edit Informasi Pos</h2><p style={styles.routeEditDescription}>Perubahan langsung digunakan pada pos ini.</p></div>
-            <div style={styles.routeEditActions}>
+        {editingRoute && routeDraft ? <form className="routeEditPanel" onSubmit={handleSaveRoute} style={styles.routeEditPanel}>
+          <div className="routeEditHeader" style={styles.routeEditHeader}>
+            <div><h2 className="routeEditTitle" style={styles.routeEditTitle}>Edit Informasi Pos</h2><p className="routeEditDescription" style={styles.routeEditDescription}>Perubahan langsung digunakan pada pos ini.</p></div>
+            <div className="routeEditActions" style={styles.routeEditActions}>
               <button type="button" onClick={() => setEditingRoute(false)} style={styles.routeCancelButton}>Batal</button>
               <button type="submit" disabled={routeSaving || !routeId} style={styles.routeSaveButton}>{routeSaving ? 'Menyimpan...' : 'Simpan Perubahan'}</button>
             </div>
           </div>
-          <div style={styles.routeEditGrid}>
-            <label style={styles.routeEditLabel}>Nama Pos<input required minLength={2} value={routeDraft.name} onChange={(event) => setRouteDraft({ ...routeDraft, name: event.target.value })} style={styles.routeEditInput} /></label>
-            <label style={styles.routeEditLabel}>Jenis Mini Game<input required minLength={2} value={routeDraft.gameType} onChange={(event) => setRouteDraft({ ...routeDraft, gameType: event.target.value })} style={styles.routeEditInput} /></label>
-            <label style={styles.routeEditLabel}>Lokasi<input required minLength={2} value={routeDraft.location} onChange={(event) => setRouteDraft({ ...routeDraft, location: event.target.value })} style={styles.routeEditInput} /></label>
-            <label style={styles.routeEditLabel}>Tingkat Kesulitan<select value={routeDraft.difficulty} onChange={(event) => setRouteDraft({ ...routeDraft, difficulty: event.target.value })} style={styles.routeEditInput}><option>Mudah</option><option>Sedang</option><option>Sulit</option></select></label>
-            <label style={styles.routeEditLabel}>Durasi (menit)<input required type="number" min="1" step="1" value={routeDraft.duration} onChange={(event) => setRouteDraft({ ...routeDraft, duration: Number(event.target.value) })} style={styles.routeEditInput} /></label>
-            <label style={styles.routeEditLabel}>Skor Maksimum<input required type="number" min="0" step="1" value={routeDraft.maxPoints} onChange={(event) => setRouteDraft({ ...routeDraft, maxPoints: Number(event.target.value) })} style={styles.routeEditInput} /></label>
-            <label style={styles.routeEditLabel}>Deskripsi<textarea required minLength={2} value={routeDraft.description} onChange={(event) => setRouteDraft({ ...routeDraft, description: event.target.value })} style={styles.routeEditTextarea} /></label>
-            <label style={styles.routeEditLabel}>Instruksi Permainan<textarea required minLength={2} value={routeDraft.instruction} onChange={(event) => setRouteDraft({ ...routeDraft, instruction: event.target.value })} style={styles.routeEditTextarea} /></label>
+          <div className="routeEditGrid" style={styles.routeEditGrid}>
+            <label className="routeEditLabel" style={styles.routeEditLabel}>Nama Pos<input className="routeEditInput" required minLength={2} value={routeDraft.name} onChange={(event) => setRouteDraft({ ...routeDraft, name: event.target.value })} style={styles.routeEditInput} /></label>
+            <label className="routeEditLabel" style={styles.routeEditLabel}>Jenis Mini Game<input className="routeEditInput" required minLength={2} value={routeDraft.gameType} onChange={(event) => setRouteDraft({ ...routeDraft, gameType: event.target.value })} style={styles.routeEditInput} /></label>
+            <label className="routeEditLabel" style={styles.routeEditLabel}>Lokasi<input className="routeEditInput" required minLength={2} value={routeDraft.location} onChange={(event) => setRouteDraft({ ...routeDraft, location: event.target.value })} style={styles.routeEditInput} /></label>
+            <label className="routeEditLabel" style={styles.routeEditLabel}>Tingkat Kesulitan<select className="routeEditInput" value={routeDraft.difficulty} onChange={(event) => setRouteDraft({ ...routeDraft, difficulty: event.target.value })} style={styles.routeEditInput}><option>Mudah</option><option>Sedang</option><option>Sulit</option></select></label>
+            <label className="routeEditLabel" style={styles.routeEditLabel}>Durasi (menit)<input className="routeEditInput" required type="number" min="1" step="1" value={routeDraft.duration} onChange={(event) => setRouteDraft({ ...routeDraft, duration: Number(event.target.value) })} style={styles.routeEditInput} /></label>
+            <label className="routeEditLabel" style={styles.routeEditLabel}>Skor Maksimum<input className="routeEditInput" required type="number" min="0" step="1" value={routeDraft.maxPoints} onChange={(event) => setRouteDraft({ ...routeDraft, maxPoints: Number(event.target.value) })} style={styles.routeEditInput} /></label>
+            <label className="routeEditLabel" style={styles.routeEditLabel}>Deskripsi<textarea className="routeEditTextarea" required minLength={2} value={routeDraft.description} onChange={(event) => setRouteDraft({ ...routeDraft, description: event.target.value })} style={styles.routeEditTextarea} /></label>
+            <label className="routeEditLabel" style={styles.routeEditLabel}>Instruksi Permainan<textarea className="routeEditTextarea" required minLength={2} value={routeDraft.instruction} onChange={(event) => setRouteDraft({ ...routeDraft, instruction: event.target.value })} style={styles.routeEditTextarea} /></label>
           </div>
           {routeEditMessage ? <p role="alert" style={styles.routeEditError}>{routeEditMessage}</p> : null}
         </form> : null}
