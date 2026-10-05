@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { TeamStatus, UserRole } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
-import { AuthRequest, requireAuth } from '../middleware/auth.js';
+import { AuthRequest, requireAuth, requireFacilitator } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -45,11 +45,7 @@ router.post('/', requireAuth, async (req: AuthRequest, res) => {
   return res.status(201).json({ success: true, data: team });
 });
 
-router.patch('/:id', requireAuth, async (req: AuthRequest, res) => {
-  if (req.user?.role !== UserRole.FACILITATOR) {
-    return res.status(403).json({ success: false, message: 'Only facilitators can update team status' });
-  }
-
+router.patch('/:id', requireAuth, requireFacilitator, async (req: AuthRequest, res) => {
   const parsed = statusSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ success: false, message: 'Invalid team status' });
@@ -67,7 +63,7 @@ router.patch('/:id', requireAuth, async (req: AuthRequest, res) => {
   }
 });
 
-router.delete('/:id', requireAuth, async (req, res) => {
+router.delete('/:id', requireAuth, requireFacilitator, async (req, res) => {
   try {
     const teamId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     await prisma.team.delete({ where: { id: teamId } });

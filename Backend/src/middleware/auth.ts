@@ -37,3 +37,11 @@ export async function requireAuth(req: AuthRequest, res: Response, next: NextFun
     return res.status(401).json({ success: false, message: 'Unauthorized' });
   }
 }
+
+export function requireFacilitator(req: AuthRequest, res: Response, next: NextFunction) {
+  if (req.user?.role !== UserRole.FACILITATOR) {
+    return res.status(403).json({ success: false, message: 'Only facilitators can perform this action' });
+  }
+
+  next();
+}

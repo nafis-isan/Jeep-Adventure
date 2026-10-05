@@ -21,6 +21,9 @@ export async function GET() {
 export async function POST(request: Request) {
   const session = await getSession();
   if (!session) return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+  if (session.role !== 'FACILITATOR') {
+    return NextResponse.json({ success: false, message: 'Only facilitators can save scores' }, { status: 403 });
+  }
 
   try {
     const body = await request.json();

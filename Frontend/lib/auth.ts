@@ -2,16 +2,23 @@ import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import { prisma } from './prisma';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'development-secret';
+const configuredJwtSecret = process.env.JWT_SECRET;
+
+if (process.env.NODE_ENV === 'production' && (!configuredJwtSecret || configuredJwtSecret.length < 32)) {
+  throw new Error('JWT_SECRET must be set to the shared 32-character-or-longer secret in production');
+}
+
+const JWT_SECRET = configuredJwtSecret || 'development-secret';
 
 export type SessionUser = {
   id: string;
   name: string;
   email: string;
+  role: 'CUSTOMER' | 'FACILITATOR';
 };
 
 export function createSession(user: SessionUser) {
-  const token = jwt.sign({ id: user.id, email: user.email, name: user.name }, JWT_SECRET, {
+  const token = jwt.sign({ id: user.id, email: user.email, name: user.name, role: user.role }, JWT_SECRET, {
     expiresIn: '7d',
   });
 
@@ -44,7 +51,7 @@ export async function getSession() {
     const payload = jwt.verify(token, JWT_SECRET) as { id: string; email: string; name: string };
     const user = await prisma.user.findUnique({
       where: { id: payload.id },
-      select: { id: true, name: true, email: true },
+      select: { id: true, name: true, email: true, role: true },
     });
 
     if (!user) return null;

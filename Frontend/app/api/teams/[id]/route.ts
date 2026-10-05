@@ -22,6 +22,9 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   const session = await getSession();
   if (!session) return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+  if (session.role !== 'FACILITATOR') {
+    return NextResponse.json({ success: false, message: 'Only facilitators can update teams' }, { status: 403 });
+  }
 
   try {
     const body = await request.json();
@@ -41,6 +44,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 export async function DELETE(_: Request, { params }: { params: { id: string } }) {
   const session = await getSession();
   if (!session) return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+  if (session.role !== 'FACILITATOR') {
+    return NextResponse.json({ success: false, message: 'Only facilitators can delete teams' }, { status: 403 });
+  }
 
   try {
     await prisma.team.delete({ where: { id: params.id } });

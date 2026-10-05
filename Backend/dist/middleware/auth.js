@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { UserRole } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { env } from '../config/env.js';
 export async function requireAuth(req, res, next) {
@@ -21,4 +22,10 @@ export async function requireAuth(req, res, next) {
     catch {
         return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
+}
+export function requireFacilitator(req, res, next) {
+    if (req.user?.role !== UserRole.FACILITATOR) {
+        return res.status(403).json({ success: false, message: 'Only facilitators can perform this action' });
+    }
+    next();
 }

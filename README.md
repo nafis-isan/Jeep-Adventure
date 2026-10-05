@@ -119,8 +119,6 @@ Frontend berjalan di `http://localhost:3000`. Secara default, frontend mengakses
 Akun berikut dibuat oleh seed untuk penggunaan lokal:
 
 | Role | Email | Password |
-| --- | --- | --- |
-| Customer | `customer@jeep-adventure.local` | `password123` |
 | Fasilitator | `fasilitator@jeep-adventure.local` | `password123` |
 
 Buka `http://localhost:3000/login` dan masuk menggunakan salah satu akun. Kredensial ini hanya untuk pengembangan lokal; ganti sebelum aplikasi digunakan di lingkungan bersama atau production. Tidak ada form registrasi publik di aplikasi.

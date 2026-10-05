@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { UserRole } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requireFacilitator } from '../middleware/auth.js';
 const router = Router();
 const routeSchema = z.object({
     position: z.number().int().nonnegative(),
@@ -29,7 +29,7 @@ router.get('/', requireAuth, async (req, res) => {
     const items = await prisma.route.findMany({ orderBy: { position: 'asc' } });
     return res.json({ success: true, data: items });
 });
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, requireFacilitator, async (req, res) => {
     const parsed = routeSchema.safeParse(req.body);
     if (!parsed.success) {
         return res.status(400).json({ success: false, message: parsed.error.issues[0]?.message || 'Invalid route payload' });

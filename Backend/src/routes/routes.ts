@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { UserRole } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
-import { AuthRequest, requireAuth } from '../middleware/auth.js';
+import { AuthRequest, requireAuth, requireFacilitator } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -34,7 +34,7 @@ router.get('/', requireAuth, async (req, res) => {
   return res.json({ success: true, data: items });
 });
 
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, requireFacilitator, async (req, res) => {
   const parsed = routeSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ success: false, message: parsed.error.issues[0]?.message || 'Invalid route payload' });
