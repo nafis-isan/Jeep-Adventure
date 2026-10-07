@@ -20,6 +20,7 @@ export type Team = {
   name: string;
   initials: string;
   motto: string;
+  color?: string;
   status: string;
   members?: { id: string; name: string }[];
   totalPoints?: number;

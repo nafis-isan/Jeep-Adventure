@@ -9,7 +9,7 @@ Source React Native/Expo tersedia di `mobile/` untuk pengembangan aplikasi nativ
 - Login customer dan fasilitator dengan hak akses berbeda.
 - Dashboard petualangan, daftar rute dan permainan, instruksi pos, serta pengelolaan rute untuk fasilitator.
 - Pendaftaran tim oleh customer dan persetujuan status oleh fasilitator.
-- Pengelolaan tim dan akun peserta oleh fasilitator.
+- Pengelolaan tim dan akun peserta oleh fasilitator, termasuk pilihan warna identitas tim.
 - Check-in tim pada setiap pos.
 - Pencatatan skor, catatan, dan foto bukti permainan oleh fasilitator.
 - Papan skor dan riwayat hasil permainan.

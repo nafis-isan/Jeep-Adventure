@@ -336,8 +336,10 @@ function Choice({ label, active, onPress }: { label: string; active: boolean; on
 }
 
 function TeamsScreen({ teams, token, isFacilitator, onSave }: { teams: Team[]; token: string; isFacilitator: boolean; onSave: (action: () => Promise<void>) => Promise<void> }) {
+  const teamColors = ['#2e9d63', '#e8833a', '#2868e8', '#9634e8', '#1299b7', '#d69200', '#e52d2d', '#147b73'];
   const [name, setName] = useState('');
   const [motto, setMotto] = useState('');
+  const [color, setColor] = useState(teamColors[0]);
   const [memberNames, setMemberNames] = useState('');
   const [accountName, setAccountName] = useState('');
   const [accountEmail, setAccountEmail] = useState('');
@@ -346,11 +348,11 @@ function TeamsScreen({ teams, token, isFacilitator, onSave }: { teams: Team[]; t
   const addTeam = () => onSave(async () => {
     const initials = name.trim().split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase();
     await request('/teams', token, { method: 'POST', body: {
-      name: name.trim(), initials, motto: motto.trim(), status: isFacilitator ? 'approved' : 'pending',
+      name: name.trim(), initials, motto: motto.trim(), color, status: isFacilitator ? 'approved' : 'pending',
       members: memberNames.split(/\r?\n/).map((item) => item.trim()).filter(Boolean),
       ...(isFacilitator ? { account_name: accountName.trim(), account_email: accountEmail.trim(), account_password: accountPassword, account_role: 'CUSTOMER' } : {}),
     } });
-    setName(''); setMotto(''); setMemberNames(''); setAccountName(''); setAccountEmail(''); setAccountPassword(''); setShowForm(false);
+    setName(''); setMotto(''); setColor(teamColors[0]); setMemberNames(''); setAccountName(''); setAccountEmail(''); setAccountPassword(''); setShowForm(false);
   });
   const updateTeam = (team: Team, status: string) => onSave(async () => { await request(`/teams/${team.id}`, token, { method: 'PATCH', body: { status } }); });
   const removeTeam = (team: Team) => onSave(async () => {
@@ -373,11 +375,12 @@ function TeamsScreen({ teams, token, isFacilitator, onSave }: { teams: Team[]; t
     <Text style={styles.bodyText}>Kenali tim yang bertualang di rute Jeep Adventure.</Text>
     <Button title={showForm ? 'Tutup formulir' : isFacilitator ? '＋ Tambah tim' : '＋ Daftarkan tim'} secondary onPress={() => setShowForm(!showForm)} />
     {showForm && <View style={styles.card}><Field label="Nama tim"><TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Garuda Offroad" /></Field><Field label="Motto tim"><TextInput style={styles.input} value={motto} onChangeText={setMotto} placeholder="Jelajah tanpa batas!" /></Field><Field label="Anggota (satu nama per baris)"><TextInput style={[styles.input, styles.multiline]} value={memberNames} onChangeText={setMemberNames} multiline /></Field>
+      {isFacilitator && <Field label="Warna identitas tim"><View style={styles.teamColorRow}>{teamColors.map((teamColor) => <Pressable key={teamColor} accessibilityRole="radio" accessibilityState={{ checked: color === teamColor }} accessibilityLabel={`Pilih warna ${teamColor}`} onPress={() => setColor(teamColor)} style={[styles.teamColorChoice, { backgroundColor: teamColor }, color === teamColor && styles.teamColorChoiceActive]} />)}</View></Field>}
       {isFacilitator && <><Text style={styles.eyebrow}>AKUN PESERTA</Text><Field label="Nama akun"><TextInput style={styles.input} value={accountName} onChangeText={setAccountName} /></Field><Field label="Email akun"><TextInput style={styles.input} value={accountEmail} onChangeText={setAccountEmail} autoCapitalize="none" keyboardType="email-address" /></Field><Field label="Password akun (min. 8 karakter)"><TextInput style={styles.input} value={accountPassword} onChangeText={setAccountPassword} secureTextEntry /></Field></>}
       <Button title="Simpan tim  →" onPress={addTeam} disabled={!name.trim() || !motto.trim() || (isFacilitator && (!accountName.trim() || !accountEmail.trim() || accountPassword.length < 8))} />
     </View>}
     <View style={styles.stack}>{teams.map((team) => <View key={team.id} style={styles.card}>
-      <View style={styles.rowBetween}><View style={styles.teamAvatar}><Text style={styles.teamAvatarText}>{team.initials}</Text></View><Text style={statusStyle(team.status)}>{team.status === 'APPROVED' ? 'Disetujui' : team.status === 'REJECTED' ? 'Ditolak' : 'Menunggu'}</Text></View>
+      <View style={styles.rowBetween}><View style={[styles.teamAvatar, { backgroundColor: team.color || colors.green }]}><Text style={[styles.teamAvatarText, styles.teamAvatarTextOnColor]}>{team.initials}</Text></View><Text style={statusStyle(team.status)}>{team.status === 'APPROVED' ? 'Disetujui' : team.status === 'REJECTED' ? 'Ditolak' : 'Menunggu'}</Text></View>
       <Text style={styles.cardTitle}>{team.name}</Text><Text style={styles.muted}>“{team.motto}”</Text>
       <Text style={styles.bodyText}>{team.members?.length || 0} anggota · {team.completedRoutes || 0} pos dikunjungi · {team.totalPoints || 0} poin</Text>
       {isFacilitator && <View style={styles.buttonRow}>{team.status !== 'APPROVED' && <Button title="Setujui" onPress={() => updateTeam(team, 'approved')} />}{team.status !== 'REJECTED' && <Button title="Tolak" secondary onPress={() => updateTeam(team, 'rejected')} />}<Button title="Hapus" secondary onPress={() => deleteTeam(team)} /></View>}
@@ -558,6 +561,10 @@ const styles = StyleSheet.create({
   choiceTextActive: { color: '#123d34', fontWeight: '800' },
   teamAvatar: { width: 37, height: 37, alignItems: 'center', justifyContent: 'center', borderRadius: 50, backgroundColor: '#e7f0e8' },
   teamAvatarText: { color: '#123d34', fontSize: 11, fontWeight: '900' },
+  teamAvatarTextOnColor: { color: '#fff' },
+  teamColorRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  teamColorChoice: { width: 29, height: 29, borderWidth: 3, borderColor: '#fff', borderRadius: 16 },
+  teamColorChoiceActive: { borderColor: '#123d34' },
   status: { paddingHorizontal: 8, paddingVertical: 5, overflow: 'hidden', borderRadius: 30, fontSize: 10, fontWeight: '800' },
   statusApproved: { color: '#236743', backgroundColor: '#e8f5eb' },
   statusPending: { color: '#99621a', backgroundColor: '#fff4dc' },

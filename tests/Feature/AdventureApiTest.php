@@ -37,10 +37,42 @@ class AdventureApiTest extends TestCase
                 'name' => 'Garuda Offroad',
                 'initials' => 'GO',
                 'motto' => 'Jelajah tanpa batas',
+                'color' => '#2868e8',
                 'status' => 'approved',
             ])
             ->assertCreated()
-            ->assertJsonPath('data.status', 'PENDING');
+            ->assertJsonPath('data.status', 'PENDING')
+            ->assertJsonPath('data.color', '#2868e8');
+    }
+
+    public function test_facilitator_can_choose_and_persist_a_team_identity_color(): void
+    {
+        $facilitator = $this->makeUser('FACILITATOR');
+
+        $this->actingAs($facilitator)
+            ->get(route('teams'))
+            ->assertOk()
+            ->assertSee('Warna identitas tim')
+            ->assertSee('name="color"', false)
+            ->assertSee('#9634e8');
+
+        $this->actingAs($facilitator)
+            ->post(route('teams.store'), [
+                'name' => 'Ungu Penjelajah',
+                'motto' => 'Jelajah tanpa batas',
+                'members_text' => 'Anggota Satu',
+                'color' => '#9634e8',
+                'account_name' => 'Anggota Satu',
+                'account_email' => 'anggota@example.test',
+                'account_password' => 'password123',
+                'account_role' => 'CUSTOMER',
+            ])
+            ->assertRedirect(route('teams'));
+
+        $this->assertDatabaseHas('teams', [
+            'name' => 'Ungu Penjelajah',
+            'color' => '#9634e8',
+        ]);
     }
 
     public function test_only_facilitators_can_check_in_and_score_a_team(): void

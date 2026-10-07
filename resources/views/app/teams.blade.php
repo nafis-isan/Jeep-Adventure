@@ -17,6 +17,24 @@
             <label>Nama tim<input name="name" value="{{ old('name') }}" minlength="2" required placeholder="Contoh: Garuda Offroad"></label>
             <label>Motto tim<input name="motto" value="{{ old('motto') }}" minlength="2" required placeholder="Jelajah tanpa batas!"></label>
             <label>Nama anggota <small class="muted">(satu nama per baris)</small><textarea name="members_text" rows="3" placeholder="Nama anggota 1&#10;Nama anggota 2">{{ old('members_text') }}</textarea></label>
+            <fieldset class="team-color-picker"><legend>Warna identitas tim</legend>
+                @foreach([
+                    '#2e9d63' => 'Hijau',
+                    '#e8833a' => 'Oranye',
+                    '#2868e8' => 'Biru',
+                    '#9634e8' => 'Ungu',
+                    '#1299b7' => 'Toska',
+                    '#d69200' => 'Emas',
+                    '#e52d2d' => 'Merah',
+                    '#147b73' => 'Hijau Jeep',
+                ] as $color => $colorName)
+                    <label class="team-color-option" title="{{ $colorName }}">
+                        <input type="radio" name="color" value="{{ $color }}" @checked(old('color', '#2e9d63') === $color) required>
+                        <span style="--team-color: {{ $color }}"></span>
+                        <small>{{ $colorName }}</small>
+                    </label>
+                @endforeach
+            </fieldset>
             <fieldset class="field-group"><legend>Akun peserta</legend>
                 <label>Nama<input name="account_name" value="{{ old('account_name') }}" required></label>
                 <label>Email<input type="email" name="account_email" value="{{ old('account_email') }}" required></label>
@@ -43,8 +61,8 @@
     <div class="section-heading"><div><span class="eyebrow">PESERTA</span><h2>{{ $teams->count() }} tim terdaftar</h2></div></div>
     <div class="team-grid">
         @forelse($teams as $team)
-            <article class="team-card">
-                <div class="team-card-top"><span class="team-avatar large">{{ $team['initials'] }}</span><span class="status status-{{ strtolower($team['status']) }}">{{ strtolower($team['status']) === 'approved' ? 'Disetujui' : (strtolower($team['status']) === 'rejected' ? 'Ditolak' : 'Menunggu') }}</span></div>
+            <article class="team-card" style="--team-color: {{ $team['color'] ?? '#59746b' }}">
+                <div class="team-card-top"><span class="team-avatar large team-color-avatar">{{ $team['initials'] }}</span><span class="status status-{{ strtolower($team['status']) }}">{{ strtolower($team['status']) === 'approved' ? 'Disetujui' : (strtolower($team['status']) === 'rejected' ? 'Ditolak' : 'Menunggu') }}</span></div>
                 <h3>{{ $team['name'] }}</h3><p class="team-motto">“{{ $team['motto'] }}”</p>
                 <div class="team-stats"><span>{{ count($team['members'] ?? []) }} anggota</span><span>{{ $team['completedRoutes'] }} pos dikunjungi</span><b>{{ number_format($team['totalPoints']) }} poin</b></div>
                 @if(auth()->user()->isFacilitator())

@@ -163,6 +163,7 @@ class AdventureController extends Controller
             'name' => ['required', 'string', 'min:2', 'max:255'],
             'initials' => ['nullable', 'string', 'min:2', 'max:5'],
             'motto' => ['required', 'string', 'min:2', 'max:255'],
+            'color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'members' => ['sometimes', 'array'],
             'members.*' => ['string', 'min:1', 'max:255'],
             'status' => ['sometimes', Rule::in(['pending', 'approved', 'rejected', 'PENDING', 'APPROVED', 'REJECTED'])],
@@ -190,6 +191,7 @@ class AdventureController extends Controller
                 'name' => $data['name'],
                 'initials' => strtoupper($data['initials'] ?? collect(preg_split('/\s+/', trim($data['name'])))->map(fn ($part) => mb_substr($part, 0, 1))->take(2)->implode('')),
                 'motto' => $data['motto'],
+                'color' => $data['color'] ?? '#59746b',
                 'status' => $user->isFacilitator()
                     ? strtoupper($data['status'] ?? 'APPROVED')
                     : 'PENDING',

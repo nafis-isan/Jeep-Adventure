@@ -10,7 +10,7 @@ class Team extends Model
 {
     use HasUuids;
 
-    protected $fillable = ['name', 'initials', 'motto', 'status'];
+    protected $fillable = ['name', 'initials', 'motto', 'status', 'color'];
 
     public function members(): HasMany
     {
