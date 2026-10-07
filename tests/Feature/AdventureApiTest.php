@@ -155,18 +155,45 @@ class AdventureApiTest extends TestCase
             ->assertSee('Tim Ketiga')
             ->assertSee('Tim Keempat')
             ->assertSee('podium-stage')
-            ->assertSee('JUARA 1')
             ->assertSee('rank-first')
             ->assertSee('rank-second')
             ->assertSee('rank-third')
-            ->assertSee('remaining-leaderboard')
-            ->assertSee('remaining-rank')
+            ->assertSee('scoreboard-rankings')
+            ->assertSee('scoreboard-ranking-progress')
             ->assertSee('1/1 pos');
 
-        $content = $response->getContent();
-        $this->assertLessThan(strpos($content, 'Tim Kedua'), strpos($content, 'Tim Juara'));
-        $this->assertLessThan(strpos($content, 'Tim Ketiga'), strpos($content, 'Tim Kedua'));
-        $this->assertLessThan(strpos($content, 'Tim Keempat'), strpos($content, 'Tim Ketiga'));
+        $rankings = substr($response->getContent(), strpos($response->getContent(), 'scoreboard-rankings'));
+        $this->assertLessThan(strpos($rankings, 'Tim Kedua'), strpos($rankings, 'Tim Juara'));
+        $this->assertLessThan(strpos($rankings, 'Tim Ketiga'), strpos($rankings, 'Tim Kedua'));
+        $this->assertLessThan(strpos($rankings, 'Tim Keempat'), strpos($rankings, 'Tim Ketiga'));
+    }
+
+    public function test_customer_scoreboard_keeps_empty_podium_places_until_teams_earn_scores(): void
+    {
+        $customer = $this->makeUser('CUSTOMER');
+        $route = $this->makeRoute();
+        $team = Team::create([
+            'name' => 'Tim Tunggal',
+            'initials' => 'TT',
+            'motto' => 'Berpetualang',
+            'status' => 'APPROVED',
+        ]);
+        Score::create([
+            'team_id' => $team->id,
+            'route_id' => $route->id,
+            'points' => 20,
+            'completed' => true,
+        ]);
+
+        $response = $this->actingAs($customer)->get(route('scoreboard'))
+            ->assertOk()
+            ->assertSee('Tim Tunggal')
+            ->assertSee('podium-second rank-second podium-rank-2 no-team')
+            ->assertSee('podium-third rank-third podium-rank-3 no-team')
+            ->assertSee('Belum ada tim')
+            ->assertSee('scoreboard-ranking-first');
+
+        $this->assertSame(3, substr_count($response->getContent(), 'class="podium-card'));
     }
 
     public function test_dashboard_shows_the_route_timeline_and_current_leader(): void
@@ -248,6 +275,8 @@ class AdventureApiTest extends TestCase
             ->assertSee('#9634e8')
             ->assertSee('Target Challenge')
             ->assertSee('Bukit Pasir')
+            ->assertSee('route-game-icon')
+            ->assertSee('<svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="8.5"', false)
             ->assertSee('1 check-in')
             ->assertSee('1/2')
             ->assertSee('width: 50%', false)

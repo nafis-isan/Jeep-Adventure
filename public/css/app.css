@@ -197,7 +197,8 @@ h1, h2, h3, p { overflow-wrap: anywhere; }
 .route-card-rail svg { width: 23px; height: 23px; margin-top: 12px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .route-list-content { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; padding: 22px 54px 20px 22px; }
 .route-game-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border: 1px solid color-mix(in srgb, var(--route-color) 24%, white); border-radius: 999px; color: var(--route-color); background: color-mix(in srgb, var(--route-color) 12%, white); font-size: 11px; font-weight: 700; }
-.route-game-icon { font-size: 13px; line-height: 1; }
+.route-game-icon { width: 14px; height: 14px; display: inline-grid; flex: 0 0 14px; place-items: center; }
+.route-game-icon svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 .route-list-name { margin-top: 12px; color: #242923; font-size: 19px; line-height: 1.25; }
 .route-list-card:hover .route-list-name { color: var(--route-color); }
 .route-list-description { margin-top: 8px; color: #7f7a72; font-size: 14px; line-height: 1.5; }
@@ -386,41 +387,35 @@ fieldset legend { padding: 0 5px; color: #678173; font-size: 10px; font-weight: 
 .score-form { padding-top: 16px; margin-top: 14px; border-top: 1px solid var(--line); }
 .check-field { display: flex; align-items: center; gap: 9px; }
 .check-field input { width: auto; }
-.scoreboard-heading { padding: 46px 0 10px; text-align: center; }
-.scoreboard-heading h1 { margin: 15px 0 7px; font-size: clamp(34px, 4vw, 48px); letter-spacing: -.055em; }
-.scoreboard-heading p { margin: 0; color: var(--muted); font-size: 15px; }
-.scoreboard-badge { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 999px; color: #a86314; background: #fff2cc; font-size: 13px; font-weight: 800; letter-spacing: .08em; }
+.scoreboard-heading { padding: 40px 0 4px; text-align: center; }
+.scoreboard-heading h1 { margin: 10px 0 5px; color: #252b27; font-size: clamp(27px, 3vw, 36px); letter-spacing: -.045em; }
+.scoreboard-heading p { margin: 0; color: #887c70; font-size: 13px; }
+.scoreboard-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 91px; padding: 6px 15px; border-radius: 999px; color: #b17113; background: #fff0c7; font-size: 10px; font-weight: 800; letter-spacing: .06em; }
 .podium-list { max-width: 1028px; margin: 24px auto 8px; overflow: visible; border: 0; background: transparent; }
 .leader-row { min-height: 76px; display: flex; align-items: center; gap: 15px; padding: 13px 20px; border-bottom: 1px solid #efede8; }
-.podium-row { min-height: 93px; gap: 17px; margin-bottom: 11px; padding: 15px 18px; border: 1px solid #e7e2da; border-radius: 17px; background: #fffefa; box-shadow: 0 2px 3px rgba(33,49,40,.04); }
-.podium-row:last-child { border-bottom: 1px solid #e7e2da; }
-.podium-row.rank-first { border-color: #f3d466; background: #fffcf4; }
-.podium-row.rank-second .podium-rank-badge { color: #4e5965; background: #d8dce1; }
-.podium-row.rank-third .podium-rank-badge { color: #805535; background: #ead0bb; }
-.podium-rank-badge { width: 44px; height: 44px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 12px; color: #fff; background: #ffc52e; font-size: 23px; }
-.podium-stage { max-width: 900px; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); grid-template-areas: "second first third"; align-items: end; gap: 14px; margin: 42px auto 34px; padding: 0 10px; }
-.podium-card { min-width: 0; position: relative; display: flex; flex-direction: column; align-items: center; overflow: hidden; padding: 26px 14px 0; border: 1px solid #e7e2da; border-radius: 18px 18px 8px 8px; background: #fffefa; box-shadow: 0 7px 20px rgba(33,49,40,.08); text-align: center; }
-.podium-first { grid-area: first; min-height: 320px; border-color: #edcf75; background: linear-gradient(180deg,#fffdf4,#fffefa 55%); }
-.podium-second { grid-area: second; min-height: 270px; }
-.podium-third { grid-area: third; min-height: 240px; }
-.podium-medal { min-height: 38px; font-size: 29px; line-height: 1; }
-.podium-avatar { width: 66px; height: 66px; margin: 7px 0 11px; font-size: 18px; box-shadow: 0 4px 9px rgba(28,42,34,.14); }
-.podium-place { color: #867c69; font-size: 10px; font-weight: 900; letter-spacing: .11em; }
-.podium-first .podium-place { color: #aa7b13; }
-.podium-team-name { width: 100%; overflow: hidden; margin-top: 8px; color: #27332b; font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
-.podium-score { margin-top: 8px; color: #315b49; font-size: 25px; font-weight: 900; line-height: 1.1; }
-.podium-first .podium-score { color: #aa7b13; }
-.podium-score small { font-size: 11px; font-weight: 700; }
-.podium-games { margin-top: 7px; color: var(--muted); font-size: 11px; }
-.podium-progress { width: 100%; margin-top: 12px; }
-.podium-platform { width: calc(100% + 28px); min-height: 37px; display: grid; place-items: center; margin-top: auto; color: #526158; background: #e8ece7; font-size: 15px; font-weight: 900; }
-.podium-first .podium-platform { min-height: 55px; color: #8c6507; background: #f5e7b8; font-size: 21px; }
-.podium-third .podium-platform { min-height: 29px; }
-.remaining-leaderboard { max-width: 900px; margin: 0 auto 10px; padding: 6px 17px; }
-.remaining-leaderboard h2 { margin: 12px 4px 5px; color: #34453b; font-size: 16px; }
-.remaining-leader-row:last-child { border-bottom: 0; }
-.remaining-rank { width: 29px; flex: 0 0 auto; color: #7a887e; font-size: 14px; font-weight: 800; text-align: center; }
-.remaining-leader-row .podium-total-points { font-size: 18px; }
+.podium-stage { max-width: 500px; min-height: 176px; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); grid-template-areas: "second first third"; align-items: end; gap: 18px; margin: 14px auto 24px; padding: 0 8px; }
+.podium-card { min-width: 0; min-height: 142px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; text-align: center; }
+.podium-first { grid-area: first; min-height: 176px; }
+.podium-second { grid-area: second; }
+.podium-third { grid-area: third; }
+.podium-avatar { width: 47px; height: 47px; margin: 0 0 7px; border-radius: 50%; color: #fff; font-size: 13px; font-weight: 500; }
+.podium-card.no-team .podium-avatar { background: #c5cbc8; color: #fff; }
+.podium-team-name { width: 100%; overflow: hidden; color: #25302a; font-size: 11px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.podium-score { margin-top: 2px; color: #b57713; font-size: 10px; font-weight: 700; }
+.podium-score small { font-size: inherit; }
+.podium-platform { width: 72px; height: 29px; display: grid; place-items: center; margin-top: 5px; border: 1px solid #eee8df; border-radius: 5px; color: #c7c1b9; background: #fffdfa; font-size: 15px; font-weight: 500; }
+.podium-first .podium-platform { width: 68px; height: 85px; margin-top: 4px; font-size: 15px; }
+.podium-second .podium-platform, .podium-third .podium-platform { height: 29px; }
+.scoreboard-rankings { max-width: 900px; display: grid; gap: 7px; margin: 0 auto 18px; }
+.scoreboard-ranking-row { min-height: 53px; display: flex; align-items: center; gap: 11px; padding: 8px 13px; border: 1px solid #ece6db; border-radius: 10px; background: #fffefa; }
+.scoreboard-ranking-first { border-color: #f2c85e; }
+.team-color-chip { width: 26px; height: 26px; flex: 0 0 auto; border-radius: 7px; background: var(--team-color); }
+.scoreboard-ranking-avatar { width: 28px; height: 28px; flex: 0 0 auto; border-radius: 7px; font-size: 9px; }
+.scoreboard-ranking-name { width: 120px; overflow: hidden; color: #303a33; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.scoreboard-ranking-progress { min-width: 50px; flex: 1; }
+.scoreboard-ranking-progress .leader-progress { display: block; }
+.scoreboard-ranking-games { flex: 0 0 auto; color: #80776c; font-size: 9px; white-space: nowrap; }
+.scoreboard-ranking-points { min-width: 24px; color: #27332b; font-size: 12px; text-align: right; }
 .team-color-avatar { color: white; background: var(--team-color, var(--green)); }
 .podium-team-copy { gap: 5px; }
 .podium-team-copy b { font-size: 15px; }
@@ -642,34 +637,26 @@ fieldset legend { padding: 0 5px; color: #678173; font-size: 10px; font-weight: 
     .inline-form .button { white-space: nowrap; }
     .scoreboard-heading { padding-top: 28px; }
     .scoreboard-heading p { font-size: 12px; }
-    .podium-list { margin-top: 18px; }
-    .podium-stage { gap: 6px; margin: 30px auto 24px; padding: 0; }
-    .podium-card { padding: 17px 6px 0; border-radius: 13px 13px 6px 6px; }
-    .podium-first { min-height: 263px; }
-    .podium-second { min-height: 228px; }
-    .podium-third { min-height: 207px; }
-    .podium-medal { min-height: 28px; font-size: 22px; }
-    .podium-avatar { width: 43px; height: 43px; margin: 5px 0 9px; font-size: 12px; }
-    .podium-place { font-size: 8px; letter-spacing: .06em; }
-    .podium-team-name { margin-top: 7px; font-size: 11px; }
-    .podium-score { margin-top: 7px; font-size: 17px; }
-    .podium-score small { font-size: 9px; }
-    .podium-games { font-size: 8px; }
-    .podium-platform { width: calc(100% + 12px); min-height: 30px; font-size: 12px; }
-    .podium-first .podium-platform { min-height: 43px; font-size: 18px; }
-    .podium-third .podium-platform { min-height: 24px; }
-    .remaining-leaderboard { padding: 5px 10px; }
-    .remaining-leaderboard h2 { font-size: 14px; }
-    .remaining-leader-row { gap: 8px; padding: 10px 5px; }
-    .remaining-rank { width: 20px; font-size: 11px; }
-    .remaining-leader-row .team-avatar { width: 34px; height: 34px; font-size: 10px; }
-    .remaining-leader-row .podium-total-points { min-width: 30px; font-size: 14px; }
-    .podium-row { min-height: 81px; gap: 9px; padding: 11px 10px; border-radius: 13px; }
-    .podium-rank-badge { width: 34px; height: 38px; border-radius: 10px; font-size: 19px; }
-    .podium-row .team-avatar.large { width: 39px; height: 39px; font-size: 11px; }
-    .podium-team-copy { gap: 4px; }
-    .podium-team-copy b { font-size: 12px; }
-    .podium-team-copy small { font-size: 9px; }
-    .podium-total-points { min-width: 34px; font-size: 15px; }
+    .scoreboard-heading { padding-top: 28px; }
+    .scoreboard-heading h1 { font-size: 28px; }
+    .scoreboard-heading p { font-size: 11px; }
+    .podium-stage { max-width: 420px; min-height: 156px; gap: 7px; margin: 14px auto 18px; padding: 0; }
+    .podium-card { min-height: 128px; }
+    .podium-first { min-height: 156px; }
+    .podium-avatar { width: 40px; height: 40px; margin-bottom: 6px; font-size: 11px; }
+    .podium-team-name { font-size: 9px; }
+    .podium-score { font-size: 9px; }
+    .podium-platform { width: 58px; height: 26px; font-size: 13px; }
+    .podium-first .podium-platform { width: 56px; height: 73px; font-size: 14px; }
+    .podium-second .podium-platform, .podium-third .podium-platform { height: 26px; }
+    .scoreboard-rankings { gap: 6px; margin-bottom: 14px; }
+    .scoreboard-ranking-row { min-height: 46px; gap: 7px; padding: 6px 7px; border-radius: 8px; }
+    .team-color-chip { width: 21px; height: 21px; border-radius: 6px; }
+    .scoreboard-ranking-avatar { width: 24px; height: 24px; font-size: 8px; }
+    .scoreboard-ranking-name { width: 82px; font-size: 9px; }
+    .scoreboard-ranking-progress { min-width: 30px; }
+    .scoreboard-ranking-progress .leader-progress { height: 5px; }
+    .scoreboard-ranking-games { font-size: 8px; }
+    .scoreboard-ranking-points { min-width: 19px; font-size: 10px; }
     .login-card { padding: 26px 21px; }
 }
