@@ -243,11 +243,21 @@ class AdventureController extends Controller
 
     public function routes(Request $request)
     {
-        $routes = AdventureRoute::withCount('scores')->orderBy('position')->get();
+        $query = AdventureRoute::withCount('scores')->orderBy('position');
+
+        if (! $request->expectsJson()) {
+            $query->withCount('checkIns')
+                ->withCount(['scores as completed_scores_count' => fn ($scores) => $scores->where('completed', true)]);
+        }
+
+        $routes = $query->get();
 
         return $request->expectsJson()
             ? response()->json(['success' => true, 'data' => $routes])
-            : view('app.routes', ['routes' => $routes]);
+            : view('app.routes', [
+                'routes' => $routes,
+                'totalTeams' => Team::where('status', 'APPROVED')->count(),
+            ]);
     }
 
     public function storeRoute(Request $request)
@@ -312,7 +322,10 @@ class AdventureController extends Controller
 
     public function routeDetail(AdventureRoute $route): View
     {
-        $route->load(['checkIns.team.members', 'scores.team']);
+        $route->load([
+            'checkIns.team.members',
+            'scores' => fn ($scores) => $scores->with('team')->orderByDesc('points'),
+        ]);
 
         return view('app.route-detail', [
             'route' => $route,
@@ -373,7 +386,11 @@ class AdventureController extends Controller
 
         return $request->expectsJson()
             ? response()->json(['success' => true, 'data' => $scores])
-            : view('app.scoreboard', ['leaderboard' => $this->leaderboardData(), 'scores' => $scores]);
+            : view('app.scoreboard', [
+                'leaderboard' => $this->leaderboardData(),
+                'totalRoutes' => AdventureRoute::count(),
+                'scores' => $scores,
+            ]);
     }
 
     public function storeScore(Request $request)
@@ -434,6 +451,7 @@ class AdventureController extends Controller
             ? response()->json(['success' => true, 'data' => $data])
             : view('app.scoreboard', [
                 'leaderboard' => $data,
+                'totalRoutes' => AdventureRoute::count(),
                 'scores' => Score::with(['team', 'route'])->latest()->take(20)->get(),
             ]);
     }
@@ -513,6 +531,7 @@ class AdventureController extends Controller
                 'teamId' => $team->id,
                 'name' => $team->name,
                 'initials' => $team->initials,
+                'color' => $team->color,
                 'totalPoints' => $team->scores->sum('points'),
                 'completedGames' => $team->scores->where('completed', true)->count(),
             ])

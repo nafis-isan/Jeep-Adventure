@@ -118,6 +118,167 @@ class AdventureApiTest extends TestCase
             ->assertJsonPath('data.0.totalPoints', 80);
     }
 
+    public function test_customer_scoreboard_shows_a_ranked_podium_and_remaining_teams(): void
+    {
+        $customer = $this->makeUser('CUSTOMER');
+        $route = $this->makeRoute();
+
+        foreach ([
+            ['name' => 'Tim Juara', 'initials' => 'TJ', 'points' => 90, 'color' => '#e9a52b'],
+            ['name' => 'Tim Kedua', 'initials' => 'TK', 'points' => 70, 'color' => '#2868e8'],
+            ['name' => 'Tim Ketiga', 'initials' => 'TT', 'points' => 50, 'color' => '#e8833a'],
+            ['name' => 'Tim Keempat', 'initials' => 'TE', 'points' => 30, 'color' => '#147b73'],
+        ] as $teamData) {
+            $team = Team::create([
+                'name' => $teamData['name'],
+                'initials' => $teamData['initials'],
+                'motto' => 'Terus berpetualang',
+                'status' => 'APPROVED',
+                'color' => $teamData['color'],
+            ]);
+            Score::create([
+                'team_id' => $team->id,
+                'route_id' => $route->id,
+                'points' => $teamData['points'],
+                'completed' => true,
+            ]);
+        }
+
+        $response = $this->actingAs($customer)->get(route('scoreboard'))->assertOk()
+            ->assertSee('Peringkat Tim')
+            ->assertSee('Peringkat tim')
+            ->assertSee('Tim Juara')
+            ->assertSee('Tim Kedua')
+            ->assertSee('Tim Ketiga')
+            ->assertSee('Tim Keempat')
+            ->assertSee('podium-stage')
+            ->assertSee('JUARA 1')
+            ->assertSee('rank-first')
+            ->assertSee('rank-second')
+            ->assertSee('rank-third')
+            ->assertSee('remaining-leaderboard')
+            ->assertSee('remaining-rank')
+            ->assertSee('1/1 pos');
+
+        $content = $response->getContent();
+        $this->assertLessThan(strpos($content, 'Tim Kedua'), strpos($content, 'Tim Juara'));
+        $this->assertLessThan(strpos($content, 'Tim Ketiga'), strpos($content, 'Tim Kedua'));
+        $this->assertLessThan(strpos($content, 'Tim Keempat'), strpos($content, 'Tim Ketiga'));
+    }
+
+    public function test_dashboard_shows_the_route_timeline_and_current_leader(): void
+    {
+        $facilitator = $this->makeUser('FACILITATOR');
+        $route = $this->makeRoute();
+        $leader = Team::create([
+            'name' => 'Tim Puncak',
+            'initials' => 'TP',
+            'motto' => 'Terus melaju',
+            'status' => 'APPROVED',
+        ]);
+        $otherTeam = Team::create([
+            'name' => 'Tim Kedua',
+            'initials' => 'TK',
+            'motto' => 'Tetap kompak',
+            'status' => 'APPROVED',
+        ]);
+        Score::create([
+            'team_id' => $leader->id,
+            'route_id' => $route->id,
+            'points' => 95,
+            'completed' => true,
+        ]);
+        Score::create([
+            'team_id' => $otherTeam->id,
+            'route_id' => $route->id,
+            'points' => 45,
+            'completed' => true,
+        ]);
+
+        $this->actingAs($facilitator)->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Petualangan Jeep')
+            ->assertSee('Titik Pemberhentian')
+            ->assertSee('Skor Tertinggi')
+            ->assertSee('Pos Garuda')
+            ->assertSee('PEMUNCAK SEMENTARA')
+            ->assertSee('Tim Puncak')
+            ->assertSee('95 poin')
+            ->assertSee($facilitator->name)
+            ->assertSee($facilitator->email)
+            ->assertSee('sidebar-logout-form')
+            ->assertSee('Keluar')
+            ->assertSee(route('routes.show', $route), false);
+    }
+
+    public function test_routes_page_shows_colored_game_cards_and_real_team_progress(): void
+    {
+        $facilitator = $this->makeUser('FACILITATOR');
+        $route = $this->makeRoute();
+        $checkedInTeam = Team::create([
+            'name' => 'Tim Check-in',
+            'initials' => 'TC',
+            'motto' => 'Siap bermain',
+            'status' => 'APPROVED',
+        ]);
+        Team::create([
+            'name' => 'Tim Menunggu',
+            'initials' => 'TM',
+            'motto' => 'Segera menyusul',
+            'status' => 'APPROVED',
+        ]);
+        CheckIn::create(['team_id' => $checkedInTeam->id, 'route_id' => $route->id]);
+        Score::create([
+            'team_id' => $checkedInTeam->id,
+            'route_id' => $route->id,
+            'points' => 80,
+            'completed' => true,
+        ]);
+
+        $this->actingAs($facilitator)->get(route('routes'))
+            ->assertOk()
+            ->assertSee('Titik Pemberhentian & Mini Games')
+            ->assertSee('data-open-route-modal', false)
+            ->assertSee('Tambah Pos & Mini Game')
+            ->assertSee('name="position"', false)
+            ->assertSee('name="color"', false)
+            ->assertSee('#9634e8')
+            ->assertSee('Target Challenge')
+            ->assertSee('Bukit Pasir')
+            ->assertSee('1 check-in')
+            ->assertSee('1/2')
+            ->assertSee('width: 50%', false)
+            ->assertSee(route('routes.show', $route), false);
+    }
+
+    public function test_facilitator_can_save_a_route_from_the_add_route_modal(): void
+    {
+        $facilitator = $this->makeUser('FACILITATOR');
+
+        $this->actingAs($facilitator)
+            ->post(route('routes.store'), [
+                'position' => 1,
+                'name' => 'Pos Merapi',
+                'game_type' => 'Team Puzzle',
+                'description' => 'Susun puzzle bersama tim.',
+                'instruction' => 'Selesaikan sebelum waktu habis.',
+                'location' => 'Hutan Pinus',
+                'duration' => 15,
+                'max_points' => 100,
+                'difficulty' => 'Mudah',
+                'color' => '#9634e8',
+            ])
+            ->assertRedirect(route('routes'))
+            ->assertSessionHas('status', 'Rute berhasil ditambahkan.');
+
+        $this->assertDatabaseHas('routes', [
+            'position' => 1,
+            'name' => 'Pos Merapi',
+            'color' => '#9634e8',
+            'instruction' => 'Selesaikan sebelum waktu habis.',
+        ]);
+    }
+
     public function test_facilitator_score_photo_is_saved_and_shown_on_the_route_page(): void
     {
         Storage::fake('public');
@@ -149,9 +310,24 @@ class AdventureApiTest extends TestCase
         $this->actingAs($facilitator)
             ->get(route('routes.show', $route))
             ->assertOk()
+            ->assertSee('route-detail-banner')
+            ->assertSee('Target Challenge')
+            ->assertSee('Tentang Target Challenge')
+            ->assertSee('Catat Skor Tim')
+            ->assertSee('Pilih tim peserta')
+            ->assertSee('Tandai sebagai selesai')
+            ->assertSee($route->color)
+            ->assertSee('Uji ketepatan.')
             ->assertSee($score->photo_url)
-            ->assertSee('Bukti skor '.$team->name)
+            ->assertSee('Lihat foto bukti '.$team->name)
             ->assertSee('Check-in tersimpan');
+
+        $this->actingAs($facilitator)
+            ->get(route('scoreboard'))
+            ->assertOk()
+            ->assertSee('HASIL TERBARU')
+            ->assertDontSee($score->photo_url)
+            ->assertDontSee('Bukti skor '.$team->name);
     }
 
     public function test_customers_cannot_create_accounts_or_approve_teams(): void
