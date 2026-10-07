@@ -27,7 +27,7 @@ class AdventureController extends Controller
     public function mobileApp(): BinaryFileResponse
     {
         $entry = public_path('mobile/index.html');
-        abort_unless(is_file($entry), 503, 'React Native Web belum dibangun. Jalankan npm run build:web dari Laravel/mobile.');
+        abort_unless(is_file($entry), 503, 'React Native Web belum dibangun. Jalankan npm run build:web dari mobile/.');
 
         return response()->file($entry);
     }

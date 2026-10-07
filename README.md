@@ -1,6 +1,6 @@
 # Jeep Adventure
 
-Jeep Adventure membantu mengelola kegiatan offroad dan team building: rute permainan, check-in, skor, dan cerita peserta. Seluruh aplikasi berada di dalam proyek Laravel: Laravel melayani website dan API, sedangkan satu source React Native/Expo di `Laravel/mobile` dapat dibangun untuk Android/iOS atau React Native Web. Laravel menyajikan hasil build web dari `Laravel/public/mobile`, dan website, aplikasi mobile, serta API menggunakan database MySQL yang sama.
+Jeep Adventure membantu mengelola kegiatan offroad dan team building: rute permainan, check-in, skor, dan cerita peserta. Laravel melayani website dan API dari root repositori. Satu source React Native/Expo di `mobile/` dapat dibangun untuk Android/iOS atau React Native Web. Laravel menyajikan hasil build web dari `public/mobile`, dan website, aplikasi mobile, serta API menggunakan database MySQL yang sama.
 
 ## Fitur
 
@@ -28,9 +28,9 @@ Fitur berbagi Instagram menyiapkan foto dan caption untuk diposting sendiri oleh
 
 ```text
 Jeep Adventure/
-├── Laravel/    # Aplikasi web/API Laravel, migrasi database, dan aplikasi Expo
-│   ├── mobile/ # Source React Native bersama dan konfigurasi Expo
-│   └── public/ # Aset website, artwork, dan hasil build React Native Web
+├── app/, routes/, resources/, database/ # Aplikasi web/API Laravel
+├── public/                             # Aset website dan hasil build React Native Web
+├── mobile/                             # Source React Native bersama dan konfigurasi Expo
 └── README.md
 ```
 
@@ -50,10 +50,9 @@ Buat database MySQL baru:
 CREATE DATABASE jeep_adventure CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-Dari PowerShell:
+Dari PowerShell, jalankan perintah di root repositori:
 
 ```powershell
-cd Laravel
 Copy-Item .env.example .env
 composer install
 php artisan key:generate
@@ -62,7 +61,7 @@ php artisan storage:link
 php artisan serve
 ```
 
-Sebelum menjalankan migrasi, sesuaikan `Laravel/.env` jika host, nama database, username, atau password MySQL berbeda dari contoh. Aplikasi web tersedia di `http://localhost:8000`.
+Sebelum menjalankan migrasi, sesuaikan `.env` jika host, nama database, username, atau password MySQL berbeda dari contoh. Aplikasi web tersedia di `http://localhost:8000`.
 
 Seeder membuat akun lokal untuk pengembangan:
 
@@ -71,24 +70,24 @@ Seeder membuat akun lokal untuk pengembangan:
 | Customer | `customer@jeep-adventure.local` | `password123` |
 | Fasilitator | `fasilitator@jeep-adventure.local` | `password123` |
 
-Ganti kredensial tersebut sebelum memakai lingkungan bersama atau production. Seeder juga menambahkan enam rute permainan awal. Foto disimpan di `Laravel/storage/app/public`; perintah `php artisan storage:link` membuatnya tersedia untuk web dan aplikasi mobile. Artwork proyek berada di `Laravel/public/Assets/images`.
+Ganti kredensial tersebut sebelum memakai lingkungan bersama atau production. Seeder juga menambahkan enam rute permainan awal. Foto disimpan di `storage/app/public`; perintah `php artisan storage:link` membuatnya tersedia untuk web dan aplikasi mobile. Artwork proyek berada di `public/Assets/images`.
 
-## Menjalankan React Native Web di Laravel
+## Menjalankan React Native Web
 
-Source React Native, konfigurasi Expo, dan dependency berada di `Laravel/mobile`. Instal dependency, build bundle web ke public Laravel, lalu buka `/mobile`:
+Source React Native, konfigurasi Expo, dan dependency berada di `mobile/`. Instal dependency, build bundle web ke public Laravel, lalu buka `/mobile`:
 
 ```powershell
-cd Laravel\mobile
+cd mobile
 npm install
 npm run build:web
 ```
 
-Jalankan server Laravel seperti langkah di atas, lalu buka `http://localhost:8000/mobile`. Route Laravel melayani shell React Native Web, sedangkan aset statis dibaca dari `Laravel/public/mobile`. Setelah source mobile berubah, ulangi `npm run build:web`.
+Kembali ke root repositori dan jalankan server Laravel seperti langkah di atas, lalu buka `http://localhost:8000/mobile`. Route Laravel melayani shell React Native Web, sedangkan aset statis dibaca dari `public/mobile`. Setelah source mobile berubah, ulangi `npm run build:web`.
 
 Untuk pengembangan interaktif dengan Fast Refresh, jalankan Expo Web secara lokal:
 
 ```powershell
-cd Laravel\mobile
+cd mobile
 npm run web
 ```
 
@@ -104,7 +103,7 @@ npm run web
 Source React Native yang sama dapat dijalankan sebagai aplikasi native:
 
 ```powershell
-cd Laravel\mobile
+cd mobile
 $env:EXPO_PUBLIC_API_URL = "http://10.0.2.2:8000/api" # emulator Android
 npm run android
 # atau npm run ios pada macOS
@@ -116,7 +115,7 @@ Atur `EXPO_PUBLIC_API_URL` sebagai environment variable build Expo ke alamat API
 - Simulator iOS: `http://localhost:8000/api`
 - Perangkat fisik: `http://<IP-LAN-komputer>:8000/api`
 
-Untuk perangkat fisik, jalankan Laravel dengan `php artisan serve --host=0.0.0.0 --port=8000`, atur `APP_URL` di `Laravel/.env` ke IP LAN yang sama, dan pastikan komputer serta perangkat berada di jaringan yang sama. Izinkan koneksi melalui firewall komputer.
+Untuk perangkat fisik, jalankan Laravel dari root repositori dengan `php artisan serve --host=0.0.0.0 --port=8000`, atur `APP_URL` di `.env` ke IP LAN yang sama, dan pastikan komputer serta perangkat berada di jaringan yang sama. Izinkan koneksi melalui firewall komputer.
 
 ## Konfigurasi domain production
 
@@ -155,14 +154,13 @@ CREATE DATABASE jeep_adventure_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicod
 Suite pengujian memakai database `jeep_adventure_test` agar tidak menghapus database pengembangan:
 
 ```powershell
-cd Laravel
 php artisan test
 ```
 
 Periksa tipe dan build web aplikasi React Native:
 
 ```powershell
-cd Laravel\mobile
+cd mobile
 npx tsc --noEmit
 npm run build:web
 ```
