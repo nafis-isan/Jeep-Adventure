@@ -118,6 +118,10 @@ Atur `EXPO_PUBLIC_API_URL` sebagai environment variable build Expo ke alamat API
 
 Untuk perangkat fisik, jalankan Laravel dengan `php artisan serve --host=0.0.0.0 --port=8000`, atur `APP_URL` di `Laravel/.env` ke IP LAN yang sama, dan pastikan komputer serta perangkat berada di jaringan yang sama. Izinkan koneksi melalui firewall komputer.
 
+## Konfigurasi domain production
+
+Konfigurasi lama memisahkan website di `https://jag.linqkeun.com` dan API di `https://api.jag.linqkeun.com`. Laravel kini melayani website dan API dari satu aplikasi. Atur `APP_URL=https://jag.linqkeun.com` dan `APP_ENV=production`, pastikan `APP_DEBUG=false`, lalu arahkan kedua domain ke deployment Laravel yang sama jika domain API lama tetap digunakan. Untuk build Android/iOS production, atur `EXPO_PUBLIC_API_URL=https://api.jag.linqkeun.com/api`. React Native Web yang dilayani Laravel tetap menggunakan `/api` dari origin yang sama.
+
 ## Endpoint JSON untuk mobile
 
 Selain `GET /health` dan `POST /api/auth/login`, endpoint di bawah memerlukan header `Authorization: Bearer <token>` dan `Accept: application/json`. Login menghasilkan token Sanctum.
