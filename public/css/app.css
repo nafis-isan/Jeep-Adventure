@@ -81,6 +81,21 @@ h1, h2, h3, p { overflow-wrap: anywhere; }
 .table-card, .panel, .leaderboard { border: 1px solid var(--line); border-radius: 16px; background: #fffefa; }
 .list-row { min-height: 68px; display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid #eeece7; }
 .list-row:last-child { border-bottom: 0; }
+.checkin-heading, .score-result-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.checkin-heading { margin-top: 18px; }
+.checkin-heading h3 { margin: 0 !important; }
+.checkin-heading > strong { padding: 6px 10px; border-radius: 999px; color: #276749; background: #e8f5eb; font-size: 12px; }
+.checkin-team-row { align-items: flex-start; }
+.checkin-team-row.is-checked-in { border-radius: 10px; background: #f5fff8; }
+.checkin-status { color: #357052 !important; }
+.score-evidence-link { width: fit-content; display: grid; justify-items: start; gap: 4px; margin-top: 8px; color: #226553; font-size: 10px; font-weight: 700; }
+.score-evidence { display: block; object-fit: cover; border: 1px solid var(--line); border-radius: 9px; background: #f3f0eb; }
+.checkin-evidence { width: 120px; max-height: 80px; }
+.score-result { padding: 13px 14px; border: 1px solid var(--line); border-radius: 12px; background: #fffefa; }
+.score-result > p { margin: 8px 0 0; color: #57635d; font-size: 12px; line-height: 1.5; }
+.result-evidence { width: 140px; max-height: 100px; }
+.scoreboard-evidence { width: 120px; max-height: 76px; }
+.score-photo-preview { max-width: 260px; max-height: 180px; object-fit: cover; border-radius: 10px; }
 .list-copy { min-width: 0; flex: 1; display: grid; gap: 4px; }
 .list-copy b { font-size: 13px; }
 .list-copy small { color: var(--muted); font-size: 11px; }

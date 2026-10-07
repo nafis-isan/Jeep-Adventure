@@ -1,48 +1,51 @@
 # Jeep Adventure
 
-Jeep Adventure membantu mengelola kegiatan offroad dan team building: rute permainan, check-in, skor, dan cerita peserta. Laravel melayani website dan API dari root repositori. Satu source React Native/Expo di `mobile/` dapat dibangun untuk Android/iOS atau React Native Web. Laravel menyajikan hasil build web dari `public/mobile`, dan website, aplikasi mobile, serta API menggunakan database MySQL yang sama.
+Aplikasi untuk mengelola kegiatan offroad dan team building Jeep Adventure. Laravel melayani website, API, autentikasi, serta penyimpanan data MySQL. Website menggunakan desain responsif dan bisa dibuka langsung melalui Chrome di komputer maupun ponsel—tidak perlu memasang aplikasi mobile untuk menggunakannya melalui browser.
+
+Source React Native/Expo tersedia di `mobile/` untuk pengembangan aplikasi native Android/iOS.
 
 ## Fitur
 
-- Login customer dan fasilitator dengan hak akses berbasis peran.
-- Dashboard, deskripsi rute dan permainan, instruksi pos, serta fitur edit rute untuk fasilitator.
-- Pendaftaran tim, persetujuan fasilitator, pembuatan akun peserta, dan daftar anggota tim.
-- Check-in tim dan pencatatan satu skor selesai per tim dan rute.
-- Unggah bukti skor, papan skor, dan riwayat skor.
-- Cerita peserta dengan rating 1–5, foto JPG/PNG/WEBP opsional maksimal 5 MB, serta galeri yang dapat difilter.
-- Aplikasi React Native/Expo yang sama dapat dijalankan sebagai aplikasi Android/iOS dan React Native Web.
-- Laravel menyajikan versi browser aplikasi React Native pada `/mobile`, tanpa server Next.js atau Node.js terpisah.
-- Sesi web memakai cookie sesi Laravel HTTP-only; token mobile memakai Laravel Sanctum dan disimpan di secure storage perangkat.
-
-Fitur berbagi Instagram menyiapkan foto dan caption untuk diposting sendiri oleh pengguna. Instagram tidak mengizinkan aplikasi ini menerbitkan Story atau memasang stiker Mention secara otomatis; langkah tersebut tetap dilakukan pengguna di Instagram.
+- Login customer dan fasilitator dengan hak akses berbeda.
+- Dashboard petualangan, daftar rute dan permainan, instruksi pos, serta pengelolaan rute untuk fasilitator.
+- Pendaftaran tim oleh customer dan persetujuan status oleh fasilitator.
+- Pengelolaan tim dan akun peserta oleh fasilitator.
+- Check-in tim pada setiap pos.
+- Pencatatan skor, catatan, dan foto bukti permainan oleh fasilitator.
+- Papan skor dan riwayat hasil permainan.
+- Cerita pengalaman dengan rating dan foto, termasuk galeri peserta.
+- Tampilan website responsif untuk layar ponsel.
+- API Laravel Sanctum yang dapat digunakan source React Native.
 
 ## Teknologi
 
-- Web dan backend: Laravel 12, PHP 8.2+
-- Aplikasi mobile: React Native, Expo, TypeScript
-- Database: MySQL 8+
-- Autentikasi mobile: Laravel Sanctum
-- Penyimpanan foto: Laravel public storage
+- PHP 8.2+ dan Laravel 12
+- MySQL 8+ (atau SQLite untuk pengembangan lokal)
+- Composer
+- Node.js 20+ dan npm untuk source React Native/Expo
+- React Native, Expo, dan TypeScript di `mobile/`
 
 ## Struktur proyek
 
 ```text
 Jeep Adventure/
-├── app/, routes/, resources/, database/ # Aplikasi web/API Laravel
-├── public/                             # Aset website dan hasil build React Native Web
-├── mobile/                             # Source React Native bersama dan konfigurasi Expo
+├── app/                 # Controller, model, middleware
+├── bootstrap/           # Bootstrap Laravel
+├── config/              # Konfigurasi aplikasi dan database
+├── database/            # Migration, factory, dan seeder
+├── mobile/              # Source React Native/Expo untuk Android/iOS
+├── public/              # Entry point, CSS, artwork, dan file publik
+├── resources/views/     # Halaman website Laravel
+├── routes/              # Route web dan API
+├── storage/             # Log, cache, dan file unggahan
+├── tests/               # Pengujian Laravel
+├── .env.example         # Contoh konfigurasi lokal
 └── README.md
 ```
 
-## Prasyarat
+## Menjalankan secara lokal
 
-- PHP 8.2 atau lebih baru dengan ekstensi PDO MySQL, Fileinfo, GD, mbstring, OpenSSL, dan XML
-- Composer
-- MySQL 8 atau lebih baru
-- Node.js 20 atau lebih baru dan npm
-- Expo Go untuk uji coba perangkat, atau lingkungan native Android/iOS
-
-## Menjalankan aplikasi Laravel
+### 1. Siapkan database
 
 Buat database MySQL baru:
 
@@ -50,128 +53,156 @@ Buat database MySQL baru:
 CREATE DATABASE jeep_adventure CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-Dari PowerShell, jalankan perintah di root repositori:
+### 2. Pasang dependensi dan konfigurasi Laravel
+
+Jalankan perintah dari root repositori di PowerShell:
 
 ```powershell
 Copy-Item .env.example .env
 composer install
 php artisan key:generate
+```
+
+Edit `.env` dan tetapkan koneksi MySQL:
+
+```dotenv
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=jeep_adventure
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+Gunakan username dan password MySQL lokal Anda. Jalankan migrasi, data awal, tautan file publik, lalu server:
+
+```powershell
 php artisan migrate --seed
 php artisan storage:link
 php artisan serve
 ```
 
-Sebelum menjalankan migrasi, sesuaikan `.env` jika host, nama database, username, atau password MySQL berbeda dari contoh. Aplikasi web tersedia di `http://localhost:8000`.
+Buka [http://localhost:8000](http://localhost:8000). Untuk memakai website di ponsel, buka alamat server dari Chrome di ponsel; perangkat dan komputer harus dapat saling menjangkau melalui jaringan. Jalankan server dengan `php artisan serve --host=0.0.0.0 --port=8000`, atur `APP_URL` di `.env` ke alamat IP LAN komputer, dan izinkan koneksi melalui firewall.
 
-Seeder membuat akun lokal untuk pengembangan:
+### Menggunakan SQLite
+
+Untuk pengembangan lokal tanpa MySQL, buat file database dan atur `.env`:
+
+```powershell
+New-Item -ItemType File -Path database\database.sqlite -Force
+```
+
+```dotenv
+DB_CONNECTION=sqlite
+DB_DATABASE=database/database.sqlite
+```
+
+Kemudian jalankan:
+
+```powershell
+php artisan migrate --seed
+php artisan storage:link
+php artisan serve
+```
+
+## Akun demo lokal
+
+Seeder membuat akun berikut:
 
 | Peran | Email | Password |
 | --- | --- | --- |
 | Customer | `customer@jeep-adventure.local` | `password123` |
-| Fasilitator | `fasilitator@jeep-adventure.local` | `password123` |
+| Fasilitator | `fasilitator@jeep-adventure.local` | `jeepadventurehebat` |
 
-Ganti kredensial tersebut sebelum memakai lingkungan bersama atau production. Seeder juga menambahkan enam rute permainan awal. Foto disimpan di `storage/app/public`; perintah `php artisan storage:link` membuatnya tersedia untuk web dan aplikasi mobile. Artwork proyek berada di `public/Assets/images`.
+Kredensial ini hanya untuk lingkungan lokal. Ganti password dan jangan gunakan akun demo di production. Menjalankan ulang `php artisan db:seed` akan menyelaraskan kembali akun demo dengan password pada seeder.
 
-## Menjalankan React Native Web
+## Foto dan file publik
 
-Source React Native, konfigurasi Expo, dan dependency berada di `mobile/`. Instal dependency, build bundle web ke public Laravel, lalu buka `/mobile`:
+Foto pengalaman dan bukti skor disimpan pada disk Laravel `public`, di bawah `storage/app/public`. Jalankan `php artisan storage:link` agar dapat dibaca browser melalui `public/storage`. File foto yang diterima harus berupa JPG, PNG, atau WEBP dan berukuran maksimal 5 MB.
+
+Artwork aplikasi berada di `public/Assets/images`.
+
+## Aplikasi React Native
+
+Source Expo di `mobile/` adalah untuk pengembangan atau build aplikasi Android/iOS. Website yang dibuka di Chrome ponsel tetap memakai website Laravel responsif; tidak perlu membuka `/mobile` atau membangun bundle React Native Web untuk pengalaman tersebut.
+
+Pasang dependency dan mulai Expo:
 
 ```powershell
-cd mobile
+Set-Location mobile
 npm install
-npm run build:web
 ```
 
-Kembali ke root repositori dan jalankan server Laravel seperti langkah di atas, lalu buka `http://localhost:8000/mobile`. Route Laravel melayani shell React Native Web, sedangkan aset statis dibaca dari `public/mobile`. Setelah source mobile berubah, ulangi `npm run build:web`.
-
-Untuk pengembangan interaktif dengan Fast Refresh, jalankan Expo Web secara lokal:
+Atur URL API Laravel yang dapat dijangkau perangkat sebelum menjalankan aplikasi:
 
 ```powershell
-cd mobile
-npm run web
-```
-
-Karena Expo Web dan Laravel berjalan pada port berbeda selama pengembangan, arahkan API ke Laravel sebelum menjalankan Expo (contoh PowerShell):
-
-```powershell
-$env:EXPO_PUBLIC_API_URL = "http://localhost:8000/api"
-npm run web
-```
-
-## Menjalankan aplikasi Android/iOS
-
-Source React Native yang sama dapat dijalankan sebagai aplikasi native:
-
-```powershell
-cd mobile
-$env:EXPO_PUBLIC_API_URL = "http://10.0.2.2:8000/api" # emulator Android
+$env:EXPO_PUBLIC_API_URL = "http://10.0.2.2:8000/api" # Emulator Android
 npm run android
-# atau npm run ios pada macOS
 ```
 
-Atur `EXPO_PUBLIC_API_URL` sebagai environment variable build Expo ke alamat API Laravel yang dapat dijangkau perangkat:
+Gunakan URL yang sesuai untuk target:
 
 - Emulator Android: `http://10.0.2.2:8000/api`
 - Simulator iOS: `http://localhost:8000/api`
 - Perangkat fisik: `http://<IP-LAN-komputer>:8000/api`
 
-Untuk perangkat fisik, jalankan Laravel dari root repositori dengan `php artisan serve --host=0.0.0.0 --port=8000`, atur `APP_URL` di `.env` ke IP LAN yang sama, dan pastikan komputer serta perangkat berada di jaringan yang sama. Izinkan koneksi melalui firewall komputer.
+Perintah `npm run ios` tersedia untuk macOS yang sudah memiliki toolchain iOS.
 
-## Konfigurasi domain production
+## API
 
-Konfigurasi lama memisahkan website di `https://jag.linqkeun.com` dan API di `https://api.jag.linqkeun.com`. Laravel kini melayani website dan API dari satu aplikasi. Atur `APP_URL=https://jag.linqkeun.com` dan `APP_ENV=production`, pastikan `APP_DEBUG=false`, lalu arahkan kedua domain ke deployment Laravel yang sama jika domain API lama tetap digunakan. Untuk build Android/iOS production, atur `EXPO_PUBLIC_API_URL=https://api.jag.linqkeun.com/api`. React Native Web yang dilayani Laravel tetap menggunakan `/api` dari origin yang sama.
+Endpoint API menggunakan prefix `/api`. Login menerima email dan password lalu mengembalikan token Sanctum. Untuk endpoint terlindungi, kirim header:
 
-## Endpoint JSON untuk mobile
+```http
+Accept: application/json
+Authorization: Bearer <token>
+```
 
-Selain `GET /health` dan `POST /api/auth/login`, endpoint di bawah memerlukan header `Authorization: Bearer <token>` dan `Accept: application/json`. Login menghasilkan token Sanctum.
-
-| Method | Endpoint | Fungsi |
+| Method | Endpoint | Akses / fungsi |
 | --- | --- | --- |
-| `GET` | `/health` | Memeriksa ketersediaan Laravel |
-| `POST` | `/api/auth/login` | Login dan membuat token mobile |
-| `GET` | `/api/auth/me` | Mengambil pengguna aktif |
-| `POST` | `/api/auth/logout` | Mencabut token aktif |
-| `POST` | `/api/auth/accounts` | Membuat akun (khusus fasilitator) |
+| `GET` | `/health` | Status server |
+| `POST` | `/api/auth/login` | Login dan memperoleh token |
+| `GET` | `/api/auth/me` | Pengguna aktif |
+| `POST` | `/api/auth/logout` | Logout dan mencabut token |
+| `POST` | `/api/auth/accounts` | Membuat akun; fasilitator |
 | `GET`, `POST` | `/api/teams` | Melihat atau mendaftarkan tim |
-| `PATCH`, `DELETE` | `/api/teams/{team}` | Mengubah status atau menghapus tim (khusus fasilitator) |
+| `PATCH`, `DELETE` | `/api/teams/{team}` | Mengelola tim; fasilitator |
 | `GET`, `POST` | `/api/routes` | Melihat atau menambahkan rute |
-| `GET`, `PATCH`, `DELETE` | `/api/routes/{route}` | Melihat, mengubah, atau menghapus rute |
+| `GET`, `PATCH`, `DELETE` | `/api/routes/{route}` | Melihat atau mengelola rute |
 | `GET`, `POST`, `DELETE` | `/api/checkins` | Melihat, mencatat, atau membatalkan check-in |
-| `GET`, `POST` | `/api/scores` | Melihat skor atau menyimpan hasil permainan |
-| `GET` | `/api/leaderboard` | Melihat peringkat tim |
-| `GET`, `POST` | `/api/experiences` | Melihat dan mengirim cerita peserta |
+| `GET`, `POST` | `/api/scores` | Melihat atau menyimpan skor |
+| `GET` | `/api/leaderboard` | Papan skor |
+| `GET`, `POST` | `/api/experiences` | Melihat atau mengirim cerita pengalaman |
 
-Hak akses fasilitator tetap divalidasi di server. ID tim dan rute menggunakan UUID. Foto dapat dikirim sebagai file multipart atau base64 melalui `photo_data` dengan `photo_type` (`image/jpeg`, `image/png`, atau `image/webp`).
+Endpoint selain login dan health memerlukan autentikasi Sanctum. Perubahan rute, pembuatan akun, persetujuan/penghapusan tim, check-in, dan penyimpanan skor dibatasi untuk fasilitator sesuai endpoint. Foto API dapat dikirim sebagai file multipart atau sebagai `photo_data` base64 dengan `photo_type`.
 
 ## Pengujian
 
-Buat database MySQL terpisah untuk pengujian:
+Pengujian PHPUnit memakai database `jeep_adventure_test` agar tidak menghapus database pengembangan. Buat database pengujian MySQL terpisah sebelum menjalankan:
 
 ```sql
 CREATE DATABASE jeep_adventure_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-Suite pengujian memakai database `jeep_adventure_test` agar tidak menghapus database pengembangan:
-
 ```powershell
 php artisan test
 ```
 
-Periksa tipe dan build web aplikasi React Native:
+Periksa source React Native:
 
 ```powershell
-cd mobile
+Set-Location mobile
 npx tsc --noEmit
-npm run build:web
 ```
 
-## Migrasi data
+## Deployment
 
-Rewrite ini memakai database MySQL baru. Data PostgreSQL/Prisma yang lama tidak dimigrasikan; aplikasi Node.js, Next.js, dan Prisma sebelumnya telah digantikan.
+- Atur `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL`, `APP_KEY`, kredensial MySQL, dan HTTPS di server.
+- Arahkan document root web server ke direktori `public/`.
+- Pastikan `storage/` dan `bootstrap/cache/` dapat ditulis oleh pengguna proses PHP.
+- Jalankan `php artisan migrate --force` saat deployment dan `php artisan storage:link` jika tautan storage belum tersedia.
+- Domain lama `jag.linqkeun.com` dapat digunakan untuk website. Jika `api.jag.linqkeun.com` masih dipakai oleh build native, arahkan domain tersebut ke deployment Laravel yang sama dan atur `EXPO_PUBLIC_API_URL=https://api.jag.linqkeun.com/api` saat membangun aplikasi native.
+- Jangan commit `.env`, token, atau kredensial production.
 
-## Catatan keamanan
+## Migrasi dari aplikasi lama
 
-- Jangan commit file `.env` atau kredensial production.
-- Gunakan `APP_KEY` yang kuat dan HTTPS di production.
-- Jangan gunakan akun demo untuk production.
-- Gunakan media penyimpanan persisten yang sesuai untuk foto production.
+Implementasi saat ini menggunakan database Laravel baru. Data lama dari PostgreSQL/Prisma tidak otomatis dipindahkan; backup dan migrasi data harus dilakukan terpisah jika data tersebut perlu dipertahankan.

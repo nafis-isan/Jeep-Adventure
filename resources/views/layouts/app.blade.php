@@ -21,7 +21,6 @@
                     <a href="{{ route('routes') }}" class="{{ request()->routeIs('routes*') ? 'active' : '' }}">⌖ <span>Route &amp; Games</span></a>
                     <a href="{{ route('teams') }}" class="{{ request()->routeIs('teams*') ? 'active' : '' }}">♧ <span>Tim</span></a>
                     <a href="{{ route('scoreboard') }}" class="{{ request()->routeIs('scoreboard') ? 'active' : '' }}">♜ <span>Papan Skor</span></a>
-                    <a href="{{ route('mobile') }}">▣ <span>Mobile App</span></a>
                     @unless(auth()->user()->isFacilitator())
                         <a href="{{ route('experiences') }}" class="{{ request()->routeIs('experiences*') ? 'active' : '' }}">↗ <span>Bagikan Pengalaman</span></a>
                     @endunless

@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\AdventureRoute;
+use App\Models\CheckIn;
+use App\Models\Score;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -14,6 +16,16 @@ use Tests\TestCase;
 class AdventureApiTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_seeded_facilitator_can_log_in_with_the_demo_password(): void
+    {
+        $this->seed();
+
+        $this->postJson('/api/auth/login', [
+            'email' => 'fasilitator@jeep-adventure.local',
+            'password' => 'jeepadventurehebat',
+        ])->assertOk();
+    }
 
     public function test_customer_can_register_a_team_and_it_remains_pending(): void
     {
@@ -72,6 +84,42 @@ class AdventureApiTest extends TestCase
         $this->withToken($token)->getJson('/api/leaderboard')
             ->assertOk()
             ->assertJsonPath('data.0.totalPoints', 80);
+    }
+
+    public function test_facilitator_score_photo_is_saved_and_shown_on_the_route_page(): void
+    {
+        Storage::fake('public');
+        $facilitator = $this->makeUser('FACILITATOR');
+        $team = Team::create([
+            'name' => 'Garuda Offroad',
+            'initials' => 'GO',
+            'motto' => 'Jelajah tanpa batas',
+            'status' => 'APPROVED',
+        ]);
+        $route = $this->makeRoute();
+        CheckIn::create(['team_id' => $team->id, 'route_id' => $route->id]);
+
+        $this->actingAs($facilitator)
+            ->post(route('scores.store'), [
+                'team_id' => $team->id,
+                'route_id' => $route->id,
+                'points' => 80,
+                'completed' => '1',
+                'note' => 'Misi selesai',
+                'photo' => UploadedFile::fake()->image('bukti.jpg'),
+            ])
+            ->assertRedirect();
+
+        $score = Score::firstOrFail();
+        Storage::disk('public')->assertExists($score->photo_path);
+        $this->assertSame(Storage::disk('public')->url($score->photo_path), $score->photo_url);
+
+        $this->actingAs($facilitator)
+            ->get(route('routes.show', $route))
+            ->assertOk()
+            ->assertSee($score->photo_url)
+            ->assertSee('Bukti skor '.$team->name)
+            ->assertSee('Check-in tersimpan');
     }
 
     public function test_customers_cannot_create_accounts_or_approve_teams(): void

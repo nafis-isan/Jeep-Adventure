@@ -19,24 +19,52 @@
     <section class="panel">
         <span class="eyebrow">PROGRES TIM</span><h2>Check-in &amp; skor</h2>
         @if(auth()->user()->isFacilitator())
-            <form method="post" action="{{ route('checkins.store') }}" class="inline-form">@csrf
-                <input type="hidden" name="route_id" value="{{ $route->id }}">
-                <label class="grow">Check-in tim<select name="team_id" required><option value="">Pilih tim</option>@foreach($teams as $team)<option value="{{ $team->id }}">{{ $team->name }}</option>@endforeach</select></label>
-                <button class="button primary" type="submit">Check-in</button>
-            </form>
+            <div class="checkin-heading">
+                <h3>Check-in tim</h3>
+                <strong>{{ $route->checkIns->count() }}/{{ $teams->count() }}</strong>
+            </div>
+            <p class="muted">Catat kehadiran setiap tim saat tiba di pos ini.</p>
             <div class="checkin-list">
-                @foreach($route->checkIns as $checkIn)
-                    <div class="list-row compact"><span class="team-avatar">{{ $checkIn->team->initials }}</span><div class="list-copy"><b>{{ $checkIn->team->name }}</b><small>Sudah check-in</small></div>
-                        <form method="post" action="{{ route('checkins.destroy') }}">@csrf @method('DELETE')<input type="hidden" name="team_id" value="{{ $checkIn->team_id }}"><input type="hidden" name="route_id" value="{{ $route->id }}"><button class="button small subtle" type="submit">Batalkan</button></form>
+                @forelse($teams as $team)
+                    @php
+                        $checkIn = $route->checkIns->firstWhere('team_id', $team->id);
+                        $teamScore = $route->scores->firstWhere('team_id', $team->id);
+                    @endphp
+                    <div class="list-row compact checkin-team-row {{ $checkIn ? 'is-checked-in' : '' }}">
+                        <span class="team-avatar">{{ $team->initials }}</span>
+                        <div class="list-copy">
+                            <b>{{ $team->name }}</b>
+                            @if($checkIn)
+                                <small class="checkin-status">✓ Check-in tersimpan{{ $teamScore ? ' · '.$teamScore->points.' poin' : '' }}</small>
+                            @else
+                                <small>Belum check-in di pos ini</small>
+                            @endif
+                            @if($teamScore?->photo_url)
+                                <a class="score-evidence-link" href="{{ $teamScore->photo_url }}" target="_blank" rel="noopener">
+                                    <img class="score-evidence checkin-evidence" src="{{ $teamScore->photo_url }}" alt="Bukti skor {{ $team->name }}" loading="lazy">
+                                    <span>Lihat foto bukti</span>
+                                </a>
+                            @endif
+                        </div>
+                        <form method="post" action="{{ $checkIn ? route('checkins.destroy') : route('checkins.store') }}">
+                            @csrf
+                            @if($checkIn) @method('DELETE') @endif
+                            <input type="hidden" name="team_id" value="{{ $team->id }}">
+                            <input type="hidden" name="route_id" value="{{ $route->id }}">
+                            <button class="button small {{ $checkIn ? 'subtle' : 'primary' }}" type="submit">{{ $checkIn ? 'Hadir' : 'Check-in' }}</button>
+                        </form>
                     </div>
-                @endforeach
+                @empty
+                    <div class="empty-state">Belum ada tim terdaftar.</div>
+                @endforelse
             </div>
             <form method="post" action="{{ route('scores.store') }}" enctype="multipart/form-data" class="form-grid score-form">@csrf
                 <input type="hidden" name="route_id" value="{{ $route->id }}">
-                <label>Tim<select name="team_id" required><option value="">Pilih tim yang sudah check-in</option>@foreach($route->checkIns as $checkIn)<option value="{{ $checkIn->team_id }}">{{ $checkIn->team->name }}</option>@endforeach</select></label>
+                <label>Tim<select name="team_id" required><option value="">Pilih tim yang sudah check-in</option>@foreach($teams as $team)@php $teamScore = $route->scores->firstWhere('team_id', $team->id); $teamCheckedIn = $route->checkIns->contains('team_id', $team->id); @endphp<option value="{{ $team->id }}" @disabled(!$teamCheckedIn || $teamScore)>{{ $team->name }}{{ $teamScore ? ' (Skor tersimpan)' : (!$teamCheckedIn ? ' (Belum check-in)' : '') }}</option>@endforeach</select></label>
                 <label>Skor<input type="number" name="points" min="0" max="{{ $route->max_points }}" required></label>
                 <label class="wide">Catatan<textarea name="note" rows="2"></textarea></label>
-                <label class="wide">Foto bukti <small class="muted">JPG, PNG, WEBP · maks 5 MB</small><input type="file" name="photo" accept="image/jpeg,image/png,image/webp"></label>
+                <label class="wide">Foto bukti <small class="muted">JPG, PNG, WEBP · maks 5 MB</small><input id="score-photo" type="file" name="photo" accept="image/jpeg,image/png,image/webp"></label>
+                <img id="score-photo-preview" class="photo-preview score-photo-preview" alt="Pratinjau foto bukti" hidden>
                 <label class="check-field"><input type="checkbox" name="completed" value="1" required> Game telah selesai</label>
                 <button class="button primary" type="submit">Simpan skor <span>→</span></button>
             </form>
@@ -52,9 +80,19 @@
         <h3>Skor tersimpan</h3>
         <div class="checkin-list">
             @forelse($route->scores as $score)
-                <div class="list-row compact"><span class="team-avatar">{{ $score->team->initials }}</span><div class="list-copy"><b>{{ $score->team->name }}</b><small>{{ $score->note ?: 'Game selesai' }}</small></div><strong class="points">{{ $score->points }} <small>PTS</small></strong></div>
+                <article class="score-result">
+                    <div class="score-result-heading"><b>{{ $score->team->name }}</b><strong class="points">{{ $score->points }} <small>PTS</small></strong></div>
+                    <small class="checkin-status">✓ {{ $score->completed ? 'Game selesai' : 'Belum selesai' }}</small>
+                    @if($score->note)<p>{{ $score->note }}</p>@endif
+                    @if($score->photo_url)
+                        <a class="score-evidence-link" href="{{ $score->photo_url }}" target="_blank" rel="noopener">
+                            <img class="score-evidence result-evidence" src="{{ $score->photo_url }}" alt="Bukti skor {{ $score->team->name }}" loading="lazy">
+                            <span>Buka foto bukti</span>
+                        </a>
+                    @endif
+                </article>
             @empty
-                <p class="muted">Belum ada skor untuk pos ini.</p>
+                <div class="empty-state">Belum ada skor untuk pos ini.</div>
             @endforelse
         </div>
     </section>
@@ -74,3 +112,28 @@
     </details>
 @endif
 @endsection
+
+@push('scripts')
+<script>
+const scorePhotoInput = document.getElementById('score-photo');
+const scorePhotoPreview = document.getElementById('score-photo-preview');
+
+scorePhotoInput?.addEventListener('change', () => {
+    const file = scorePhotoInput.files?.[0];
+    if (!file) {
+        scorePhotoPreview.hidden = true;
+        scorePhotoPreview.removeAttribute('src');
+        return;
+    }
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+        alert('Gunakan foto JPG, PNG, atau WEBP maksimal 5 MB.');
+        scorePhotoInput.value = '';
+        scorePhotoPreview.hidden = true;
+        scorePhotoPreview.removeAttribute('src');
+        return;
+    }
+    scorePhotoPreview.src = URL.createObjectURL(file);
+    scorePhotoPreview.hidden = false;
+});
+</script>
+@endpush

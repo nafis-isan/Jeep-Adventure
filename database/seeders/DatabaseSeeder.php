@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'fasilitator@jeep-adventure.local'],
             [
                 'name' => 'Fasilitator Jeep Adventure',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make('jeepadventurehebat'),
                 'role' => 'FACILITATOR',
             ],
         );

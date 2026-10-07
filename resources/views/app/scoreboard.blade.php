@@ -22,7 +22,7 @@
 </section>
 @if($scores->isNotEmpty())
     <section class="page-section"><div class="section-heading"><div><span class="eyebrow">HASIL TERBARU</span><h2>Skor permainan</h2></div></div>
-        <div class="table-card">@foreach($scores as $score)<div class="list-row"><span class="team-avatar">{{ $score->team->initials }}</span><div class="list-copy"><b>{{ $score->team->name }} · {{ $score->route->name }}</b><small>{{ $score->created_at->format('d M Y, H:i') }}{{ $score->note ? ' · '.$score->note : '' }}</small></div><strong class="points">{{ $score->points }} <small>PTS</small></strong></div>@endforeach</div>
+        <div class="table-card">@foreach($scores as $score)<div class="list-row"><span class="team-avatar">{{ $score->team->initials }}</span><div class="list-copy"><b>{{ $score->team->name }} · {{ $score->route->name }}</b><small>{{ $score->created_at->format('d M Y, H:i') }}{{ $score->note ? ' · '.$score->note : '' }}</small>@if($score->photo_url)<a class="score-evidence-link" href="{{ $score->photo_url }}" target="_blank" rel="noopener"><img class="score-evidence scoreboard-evidence" src="{{ $score->photo_url }}" alt="Bukti skor {{ $score->team->name }}" loading="lazy"><span>Lihat foto bukti</span></a>@endif</div><strong class="points">{{ $score->points }} <small>PTS</small></strong></div>@endforeach</div>
     </section>
 @endif
 @endsection
