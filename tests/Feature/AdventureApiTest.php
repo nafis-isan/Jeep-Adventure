@@ -52,6 +52,9 @@ class AdventureApiTest extends TestCase
         $this->actingAs($facilitator)
             ->get(route('teams'))
             ->assertOk()
+            ->assertSee('Daftar Tim')
+            ->assertSee('data-open-team-modal', false)
+            ->assertSee('Tambah Tim Peserta')
             ->assertSee('Warna identitas tim')
             ->assertSee('name="color"', false)
             ->assertSee('#9634e8');
