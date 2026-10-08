@@ -29,6 +29,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/scoreboard', [AdventureController::class, 'leaderboard'])->name('scoreboard');
     Route::get('/experiences', [AdventureController::class, 'experiences'])->name('experiences');
     Route::post('/experiences', [AdventureController::class, 'storeExperience'])->middleware('throttle:10,1')->name('experiences.store');
+    Route::get('/experiences/{experience}/download', [AdventureController::class, 'downloadExperiencePhoto'])->name('experiences.download');
 
     Route::post('/checkins', [AdventureController::class, 'storeCheckIn'])->middleware('role:facilitator')->name('checkins.store');
     Route::delete('/checkins', [AdventureController::class, 'deleteCheckIn'])->middleware('role:facilitator')->name('checkins.destroy');

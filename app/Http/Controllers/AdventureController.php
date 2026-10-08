@@ -466,7 +466,7 @@ class AdventureController extends Controller
     {
         $experiences = Experience::with([
             'team:id,name,initials',
-            'route:id,name,game_type',
+            'route:id,name,game_type,location',
             'user:id,name',
         ])->latest()->take(50)->get();
 
@@ -483,6 +483,19 @@ class AdventureController extends Controller
                     'latestRating' => $experiences->first()?->rating ?? 0,
                 ],
             ]);
+    }
+
+    public function downloadExperiencePhoto(Experience $experience)
+    {
+        abort_unless(
+            $experience->media_path && Storage::disk('public')->exists($experience->media_path),
+            404,
+            'Foto pengalaman tidak ditemukan.'
+        );
+
+        $extension = pathinfo($experience->media_path, PATHINFO_EXTENSION) ?: 'jpg';
+
+        return Storage::disk('public')->download($experience->media_path, "jeep-adventure-story.{$extension}");
     }
 
     public function storeExperience(Request $request)
