@@ -454,7 +454,11 @@ fieldset legend { padding: 0 5px; color: #678173; font-size: 10px; font-weight: 
 .scoreboard-rankings { max-width: 1100px; display: grid; gap: 10px; margin: 0 auto 22px; }
 .scoreboard-ranking-row { min-height: 65px; display: flex; align-items: center; gap: 14px; padding: 10px 17px; border: 1px solid #ece6db; border-radius: 12px; background: #fffefa; }
 .scoreboard-ranking-first { border-color: #f2c85e; }
-.team-color-chip { width: 32px; height: 32px; flex: 0 0 auto; border-radius: 8px; background: var(--team-color); }
+.scoreboard-rank-badge { width: 42px; height: 42px; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid transparent; border-radius: 10px; color: #fff; background: #59746b; font-size: 15px; font-weight: 800; }
+.scoreboard-rank-badge svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.scoreboard-rank-1 { color: #805309; border-color: #f3d98b; background: #fff0c7; }
+.scoreboard-rank-2 { color: #535e60; border-color: #d5dadd; background: #e9edef; }
+.scoreboard-rank-3 { color: #84502c; border-color: #edc6a6; background: #f8e5d4; }
 .scoreboard-ranking-avatar { width: 36px; height: 36px; flex: 0 0 auto; border-radius: 8px; font-size: 11px; }
 .scoreboard-ranking-name { width: 160px; overflow: hidden; color: #303a33; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
 .scoreboard-ranking-progress { min-width: 50px; flex: 1; }
@@ -786,7 +790,8 @@ fieldset legend { padding: 0 5px; color: #678173; font-size: 10px; font-weight: 
     .podium-second .podium-platform, .podium-third .podium-platform { height: 29px; }
     .scoreboard-rankings { gap: 7px; margin-bottom: 16px; }
     .scoreboard-ranking-row { min-height: 54px; gap: 8px; padding: 7px 9px; border-radius: 9px; }
-    .team-color-chip { width: 25px; height: 25px; border-radius: 6px; }
+    .scoreboard-rank-badge { width: 32px; height: 32px; border-radius: 7px; font-size: 12px; }
+    .scoreboard-rank-badge svg { width: 17px; height: 17px; }
     .scoreboard-ranking-avatar { width: 28px; height: 28px; font-size: 9px; }
     .scoreboard-ranking-name { width: 95px; font-size: 10px; }
     .scoreboard-ranking-progress { min-width: 30px; }
