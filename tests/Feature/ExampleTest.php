@@ -14,6 +14,12 @@ class ExampleTest extends TestCase
     {
         $response = $this->get('/login');
 
-        $response->assertOk();
+        $response->assertOk()
+            ->assertSee('Welcome back')
+            ->assertSee('Log in to your account')
+            ->assertSee('name="email"', false)
+            ->assertSee('name="password"', false)
+            ->assertSee('Forgot password?')
+            ->assertSee('action="'.route('login.store').'"', false);
     }
 }

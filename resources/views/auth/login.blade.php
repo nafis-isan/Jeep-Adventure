@@ -5,27 +5,29 @@
 @section('content')
 <div class="login-page">
     <div class="login-card">
-        <a href="{{ route('login') }}" class="brand login-brand">
-            <img src="{{ asset('Assets/images/jeep-adventure-logo.jpeg') }}" alt="" class="brand-mark">
-            <span>JEEP <b>ADVENTURE</b></span>
+        <a href="{{ route('login') }}" class="login-brand">
+            <img src="{{ asset('Assets/images/jeep-adventure-logo.jpeg') }}" alt="" class="login-brand-mark">
+            <span><b>Jeep Adventure</b><small>OFFROAD TEAM<br>BUILDING</small></span>
         </a>
-        <span class="eyebrow">OFFROAD · TEAM BUILDING · MINI GAMES</span>
         <h1>Welcome back</h1>
-        <p class="muted">Masuk untuk melanjutkan petualanganmu.</p>
+        <p class="login-subtitle">Log in to your account</p>
         @if($errors->any())
             <div class="flash error" role="alert">{{ $errors->first() }}</div>
         @endif
-        <form method="post" action="{{ route('login.store') }}" class="form-stack">
+        <form method="post" action="{{ route('login.store') }}" class="login-form">
             @csrf
             <label>Email
-                <input type="email" name="email" value="{{ old('email') }}" autocomplete="username" placeholder="you@example.com" required autofocus>
+                <input type="email" name="email" value="{{ old('email') }}" autocomplete="username" placeholder="user@example.com" required autofocus>
             </label>
-            <label>Password
-                <input type="password" name="password" autocomplete="current-password" placeholder="Minimal 8 karakter" required>
-            </label>
-            <button class="button primary full" type="submit">Masuk ke akun <span>→</span></button>
+            <div class="login-password-field">
+                <div class="login-password-label">
+                    <label for="password">Password</label>
+                    <span class="login-forgot-password">Forgot password?</span>
+                </div>
+                <input id="password" type="password" name="password" autocomplete="current-password" placeholder="••••••••" required>
+            </div>
+            <button class="button primary full" type="submit">Log in</button>
         </form>
-        <p class="login-foot">Petualangan dimulai dari sini.</p>
     </div>
 </div>
 @endsection
