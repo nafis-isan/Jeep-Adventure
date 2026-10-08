@@ -9,12 +9,12 @@
 <section class="page-heading route-page-heading">
     <div class="route-page-heading-top">
         <div>
-            <span class="route-page-badge"><span aria-hidden="true">♧</span> RUTE PETUALANGAN</span>
+            <span class="route-page-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8h12a3 3 0 0 1 2.9 2.2l1 4A3 3 0 0 1 19 18h-1l-2-2H8l-2 2H5a3 3 0 0 1-2.9-3.8l1-4A3 3 0 0 1 6 8Z"/><path d="M7 11v4m-2-2h4m7-1h.01M18 14h.01"/></svg> RUTE PETUALANGAN</span>
             <h1>Titik Pemberhentian &amp; Mini Games</h1>
             <p>Setiap pos sepanjang rute jeep menyimpan satu mini game. Buka titik untuk membaca instruksi dan mencatat skor tim.</p>
         </div>
         @if(auth()->user()->isFacilitator())
-            <button class="button primary route-add-button" type="button" data-open-route-modal>＋ Tambah Pos</button>
+            <button class="button primary route-add-button" type="button" data-open-route-modal><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Tambah Pos</button>
         @endif
     </div>
 </section>
@@ -33,14 +33,22 @@
         @endif
         <form method="post" action="{{ route('routes.store') }}" class="form-grid route-modal-form">
             @csrf
-            <label>Urutan Pos<input type="number" name="position" min="0" value="{{ old('position', $routes->max('position') + 1) }}" required></label>
+            @php
+                $defaultPosition = $routes->max('position') + 1;
+            @endphp
+            <label>Urutan Pos<input type="number" name="position" min="0" value="{{ old('position', $defaultPosition) }}" required></label>
             <label>Nama Pos<input name="name" value="{{ old('name') }}" required minlength="2" placeholder="Mis. Pos Merapi"></label>
             <label>Jenis Game<input name="game_type" value="{{ old('game_type') }}" required minlength="2" placeholder="Mis. Team Puzzle"></label>
             <label>Durasi (Menit)<input type="number" name="duration" min="0" value="{{ old('duration', 15) }}" required></label>
             <label class="wide">Deskripsi<textarea name="description" rows="3" required minlength="2" placeholder="Jelaskan tantangan di pos ini">{{ old('description') }}</textarea></label>
             <label>Lokasi<input name="location" value="{{ old('location') }}" required minlength="2" placeholder="Mis. Hutan Pinus"></label>
             <label>Skor Maksimum<input type="number" name="max_points" min="0" value="{{ old('max_points', 100) }}" required></label>
-            <label class="wide">Kesulitan<input name="difficulty" value="{{ old('difficulty', 'Mudah') }}" required minlength="2" placeholder="Mudah, Sedang, atau Sulit"></label>
+            <label class="wide">Kesulitan<select name="difficulty" required>
+                @foreach(['Mudah', 'Sedang', 'Sulit'] as $difficulty)
+                    <option value="{{ $difficulty }}" @selected(old('difficulty', 'Mudah') === $difficulty)>{{ $difficulty }}</option>
+                @endforeach
+            </select></label>
+            @include('app.partials.route-icon-picker', ['selectedIcon' => old('icon', \App\Models\AdventureRoute::iconForPosition((int) $defaultPosition))])
             <fieldset class="route-color-picker">
                 <legend>Warna Identitas</legend>
                 @foreach([
@@ -85,50 +93,12 @@
                 <span class="route-card-rail">
                     <small>POS</small>
                     <b>{{ $route->position }}</b>
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        @switch($route->position)
-                            @case(1)
-                                <circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>
-                                @break
-                            @case(2)
-                                <path d="M8 4.5a2.5 2.5 0 1 1 4.6 1.3H18a2 2 0 0 1 2 2v3.4a2.5 2.5 0 1 0 0 5V19a2 2 0 0 1-2 2h-3.5a2.5 2.5 0 1 0-5 0H6a2 2 0 0 1-2-2v-3.4a2.5 2.5 0 1 0 0-5V7a2 2 0 0 1 2-2h3.3A2.5 2.5 0 0 1 8 4.5Z"/>
-                                @break
-                            @case(3)
-                                <path d="M8 3.5S4.5 8 4.5 11a3.5 3.5 0 0 0 7 0C11.5 8 8 3.5 8 3.5Z"/><path d="M16.5 7s-3 3.8-3 6.5a3 3 0 0 0 6 0c0-2.7-3-6.5-3-6.5Z"/>
-                                @break
-                            @case(4)
-                                <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M16.5 10a2.5 2.5 0 1 0 0-5"/><path d="M3.5 19v-1.5A4.5 4.5 0 0 1 8 13h2a4.5 4.5 0 0 1 4.5 4.5V19Z"/><path d="M16 13a4 4 0 0 1 4 4v2h-3"/>
-                                @break
-                            @case(5)
-                                <path d="M8.5 6 10 4h4l1.5 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"/><circle cx="12" cy="12.5" r="3.5"/>
-                                @break
-                            @default
-                                <circle cx="12" cy="12" r="9"/><path d="m15.8 8.2-2.4 5.2-5.2 2.4 2.4-5.2 5.2-2.4Z"/>
-                        @endswitch
-                    </svg>
+                    @include('app.partials.route-icon', ['icon' => $route->icon])
                 </span>
                 <span class="route-list-content">
                     <span class="route-game-badge">
                         <span class="route-game-icon" aria-hidden="true">
-                            @switch($route->position)
-                                @case(1)
-                                    <svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg>
-                                    @break
-                                @case(2)
-                                    <svg viewBox="0 0 24 24" focusable="false"><path d="M8 4.5a2.5 2.5 0 1 1 4.6 1.3H18a2 2 0 0 1 2 2v3.4a2.5 2.5 0 1 0 0 5V19a2 2 0 0 1-2 2h-3.5a2.5 2.5 0 1 0-5 0H6a2 2 0 0 1-2-2v-3.4a2.5 2.5 0 1 0 0-5V7a2 2 0 0 1 2-2h3.3A2.5 2.5 0 0 1 8 4.5Z"/></svg>
-                                    @break
-                                @case(3)
-                                    <svg viewBox="0 0 24 24" focusable="false"><path d="M8 3.5S4.5 8 4.5 11a3.5 3.5 0 0 0 7 0C11.5 8 8 3.5 8 3.5Z"/><path d="M16.5 7s-3 3.8-3 6.5a3 3 0 0 0 6 0c0-2.7-3-6.5-3-6.5Z"/></svg>
-                                    @break
-                                @case(4)
-                                    <svg viewBox="0 0 24 24" focusable="false"><path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M16.5 10a2.5 2.5 0 1 0 0-5"/><path d="M3.5 19v-1.5A4.5 4.5 0 0 1 8 13h2a4.5 4.5 0 0 1 4.5 4.5V19Z"/><path d="M16 13a4 4 0 0 1 4 4v2h-3"/></svg>
-                                    @break
-                                @case(5)
-                                    <svg viewBox="0 0 24 24" focusable="false"><path d="M8.5 6 10 4h4l1.5 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"/><circle cx="12" cy="12.5" r="3.5"/></svg>
-                                    @break
-                                @default
-                                    <svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="9"/><path d="m15.8 8.2-2.4 5.2-5.2 2.4 2.4-5.2 5.2-2.4Z"/></svg>
-                            @endswitch
+                            @include('app.partials.route-icon', ['icon' => $route->icon])
                         </span>
                         {{ $route->game_type }}
                     </span>

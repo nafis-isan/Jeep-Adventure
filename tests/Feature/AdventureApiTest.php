@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\AdventureRoute;
 use App\Models\CheckIn;
+use App\Models\Experience;
 use App\Models\Score;
 use App\Models\Team;
 use App\Models\User;
@@ -76,6 +77,37 @@ class AdventureApiTest extends TestCase
             'name' => 'Ungu Penjelajah',
             'color' => '#9634e8',
         ]);
+
+        $this->actingAs($facilitator)
+            ->get(route('teams'))
+            ->assertOk()
+            ->assertSee('teams-page-badge')
+            ->assertSee('teams-list-card')
+            ->assertSee('Ungu Penjelajah')
+            ->assertSee('1 anggota')
+            ->assertSee('0/0 pos')
+            ->assertSee('0 game selesai')
+            ->assertSee('teams-delete-button');
+    }
+
+    public function test_customer_cannot_add_a_team_from_the_teams_page(): void
+    {
+        $customer = $this->makeUser('CUSTOMER');
+
+        $this->actingAs($customer)
+            ->get(route('teams'))
+            ->assertOk()
+            ->assertSee('Daftar Tim')
+            ->assertDontSee('Daftarkan Tim')
+            ->assertDontSee('class="button primary route-add-button" type="button" data-open-team-modal', false)
+            ->assertDontSee('<dialog class="route-modal team-modal" data-team-modal', false);
+
+        $this->actingAs($customer)
+            ->post(route('teams.store'), [
+                'name' => 'Tim Baru',
+                'motto' => 'Jelajah bersama',
+            ])
+            ->assertForbidden();
     }
 
     public function test_only_facilitators_can_check_in_and_score_a_team(): void
@@ -159,8 +191,17 @@ class AdventureApiTest extends TestCase
             ->assertSee('rank-second')
             ->assertSee('rank-third')
             ->assertSee('scoreboard-rankings')
+            ->assertSee('scoreboard-rank-badge')
+            ->assertSee('aria-label="Peringkat 1"', false)
+            ->assertSee('aria-label="Peringkat 4"', false)
+            ->assertSee('Peringkat 1', false)
+            ->assertSee('Peringkat 2', false)
+            ->assertSee('Peringkat 3', false)
+            ->assertSee('Peringkat 4', false)
             ->assertSee('scoreboard-ranking-progress')
-            ->assertSee('1/1 pos');
+            ->assertSee('1/1 pos')
+            ->assertDontSee('HASIL TERBARU')
+            ->assertDontSee('Skor permainan');
 
         $rankings = substr($response->getContent(), strpos($response->getContent(), 'scoreboard-rankings'));
         $this->assertLessThan(strpos($rankings, 'Tim Kedua'), strpos($rankings, 'Tim Juara'));
@@ -271,12 +312,24 @@ class AdventureApiTest extends TestCase
             ->assertSee('data-open-route-modal', false)
             ->assertSee('Tambah Pos & Mini Game')
             ->assertSee('name="position"', false)
+            ->assertSee('<select name="difficulty" required>', false)
+            ->assertSee('value="Mudah" selected', false)
+            ->assertSee('value="Sedang"', false)
+            ->assertSee('value="Sulit"', false)
+            ->assertSee('route-icon-picker')
+            ->assertSee('value="target"', false)
+            ->assertSee('value="puzzle"', false)
+            ->assertSee('value="water"', false)
+            ->assertSee('value="team"', false)
+            ->assertSee('value="camera"', false)
+            ->assertSee('value="compass"', false)
             ->assertSee('name="color"', false)
             ->assertSee('#9634e8')
             ->assertSee('Target Challenge')
             ->assertSee('Bukit Pasir')
             ->assertSee('route-game-icon')
-            ->assertSee('<svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="8.5"', false)
+            ->assertSee('<svg class="route-icon-svg"', false)
+            ->assertSee('1 check-in')
             ->assertSee('1 check-in')
             ->assertSee('1/2')
             ->assertSee('width: 50%', false)
@@ -299,6 +352,7 @@ class AdventureApiTest extends TestCase
                 'max_points' => 100,
                 'difficulty' => 'Mudah',
                 'color' => '#9634e8',
+                'icon' => 'puzzle',
             ])
             ->assertRedirect(route('routes'))
             ->assertSessionHas('status', 'Rute berhasil ditambahkan.');
@@ -307,7 +361,46 @@ class AdventureApiTest extends TestCase
             'position' => 1,
             'name' => 'Pos Merapi',
             'color' => '#9634e8',
+            'icon' => 'puzzle',
             'instruction' => 'Selesaikan sebelum waktu habis.',
+        ]);
+    }
+
+    public function test_facilitator_can_open_and_save_route_edits_in_a_modal(): void
+    {
+        $facilitator = $this->makeUser('FACILITATOR');
+        $route = $this->makeRoute();
+
+        $this->actingAs($facilitator)
+            ->get(route('routes.show', $route))
+            ->assertOk()
+            ->assertSee('data-open-route-edit-modal', false)
+            ->assertSee('data-route-edit-modal', false)
+            ->assertSee('Edit Pos')
+            ->assertSee('data-close-route-edit-modal', false)
+            ->assertSee('value="target" checked', false)
+            ->assertSee('Simpan Perubahan');
+
+        $this->patch(route('routes.update', $route), [
+            'name' => 'Pos Garuda Baru',
+            'game_type' => 'Puzzle Race',
+            'location' => 'Hutan Bambu',
+            'duration' => 20,
+            'max_points' => 120,
+            'difficulty' => 'Sulit',
+            'color' => '#2868e8',
+            'icon' => 'camera',
+            'description' => 'Selesaikan puzzle bersama.',
+            'instruction' => 'Susun semua kepingan.',
+        ])->assertRedirect()
+            ->assertSessionHas('status', 'Informasi pos berhasil diperbarui.');
+
+        $this->assertDatabaseHas('routes', [
+            'id' => $route->id,
+            'name' => 'Pos Garuda Baru',
+            'difficulty' => 'Sulit',
+            'color' => '#2868e8',
+            'icon' => 'camera',
         ]);
     }
 
@@ -354,10 +447,19 @@ class AdventureApiTest extends TestCase
             ->assertSee('Lihat foto bukti '.$team->name)
             ->assertSee('Check-in tersimpan');
 
+        $customer = $this->makeUser('CUSTOMER');
+        $this->actingAs($customer)
+            ->get(route('routes.show', $route))
+            ->assertOk()
+            ->assertSee('route-result-photo-image', false)
+            ->assertSee('Bukti foto '.$team->name.' di '.$route->name)
+            ->assertSee($score->photo_url)
+            ->assertDontSee('Catat Skor Tim');
+
         $this->actingAs($facilitator)
             ->get(route('scoreboard'))
             ->assertOk()
-            ->assertSee('HASIL TERBARU')
+            ->assertDontSee('HASIL TERBARU')
             ->assertDontSee($score->photo_url)
             ->assertDontSee('Bukti skor '.$team->name);
     }
@@ -438,6 +540,42 @@ class AdventureApiTest extends TestCase
             ->assertJsonPath('data.media_type', 'image/jpeg');
 
         $this->assertCount(1, Storage::disk('public')->allFiles('experiences'));
+    }
+
+    public function test_experiences_page_shows_share_form_gallery_stats_and_latest_story(): void
+    {
+        $customer = $this->makeUser('CUSTOMER');
+        $team = Team::create([
+            'name' => 'Elang Penjelajah',
+            'initials' => 'EP',
+            'motto' => 'Terbang tinggi',
+            'status' => 'APPROVED',
+        ]);
+        $route = $this->makeRoute();
+        Experience::create([
+            'user_id' => $customer->id,
+            'team_id' => $team->id,
+            'route_id' => $route->id,
+            'story' => 'Petualangan yang sangat seru!',
+            'rating' => 5,
+        ]);
+
+        $this->actingAs($customer)
+            ->get(route('experiences'))
+            ->assertOk()
+            ->assertSee('Petualangan Lebih Seru Jika Dibagikan.')
+            ->assertSee('Galeri Pengalaman Tim')
+            ->assertSee('name="route_id"', false)
+            ->assertSee('name="team_id"', false)
+            ->assertSee('name="rating"', false)
+            ->assertSee('value="5" checked', false)
+            ->assertSee('Titik Pemberhentian')
+            ->assertSee('Tim Peserta')
+            ->assertSee('Cerita Tersimpan')
+            ->assertSee('Rating Terbaru')
+            ->assertSee('CERITA TERBARU')
+            ->assertSee('Petualangan yang sangat seru!')
+            ->assertSee('Bagikan ke Instagram');
     }
 
     private function makeUser(string $role): User

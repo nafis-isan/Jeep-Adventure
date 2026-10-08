@@ -16,7 +16,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [AdventureController::class, 'dashboard'])->name('dashboard');
 
     Route::get('/teams', [AdventureController::class, 'teams'])->name('teams');
-    Route::post('/teams', [AdventureController::class, 'storeTeam'])->name('teams.store');
+    Route::post('/teams', [AdventureController::class, 'storeTeam'])->middleware('role:facilitator')->name('teams.store');
     Route::patch('/teams/{team}/status', [AdventureController::class, 'updateTeam'])->middleware('role:facilitator')->name('teams.status');
     Route::delete('/teams/{team}', [AdventureController::class, 'deleteTeam'])->middleware('role:facilitator')->name('teams.destroy');
 

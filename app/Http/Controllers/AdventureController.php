@@ -145,7 +145,10 @@ class AdventureController extends Controller
             return response()->json(['success' => true, 'data' => $teams]);
         }
 
-        return view('app.teams', ['teams' => $teams]);
+        return view('app.teams', [
+            'teams' => $teams,
+            'totalRoutes' => AdventureRoute::count(),
+        ]);
     }
 
     public function storeTeam(Request $request)
@@ -273,9 +276,11 @@ class AdventureController extends Controller
             'max_points' => ['required', 'integer', 'min:0'],
             'difficulty' => ['required', 'string', 'min:2', 'max:100'],
             'color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'icon' => ['nullable', Rule::in(array_keys(AdventureRoute::ICONS))],
         ]);
         $data['instruction'] = $data['instruction'] ?? '';
         $data['color'] = $data['color'] ?? '#147b73';
+        $data['icon'] = $data['icon'] ?? AdventureRoute::iconForPosition((int) $data['position']);
         $route = AdventureRoute::create($data);
 
         return $request->expectsJson()
@@ -295,6 +300,7 @@ class AdventureController extends Controller
             'max_points' => ['sometimes', 'required', 'integer', 'min:0'],
             'difficulty' => ['sometimes', 'required', 'string', 'min:2', 'max:100'],
             'color' => ['sometimes', 'required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'icon' => ['sometimes', 'required', Rule::in(array_keys(AdventureRoute::ICONS))],
         ]);
         if ($data === []) {
             throw ValidationException::withMessages([
@@ -470,6 +476,12 @@ class AdventureController extends Controller
                 'experiences' => $experiences,
                 'teams' => Team::orderBy('name')->get(),
                 'routes' => AdventureRoute::orderBy('position')->get(),
+                'experienceStats' => [
+                    'routes' => AdventureRoute::count(),
+                    'teams' => Team::where('status', 'APPROVED')->count(),
+                    'stories' => Experience::count(),
+                    'latestRating' => $experiences->first()?->rating ?? 0,
+                ],
             ]);
     }
 

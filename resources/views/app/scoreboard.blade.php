@@ -7,7 +7,7 @@
     $podiumRanks = [2, 1, 3];
 @endphp
 <section class="scoreboard-heading">
-    <span class="scoreboard-badge"><span>PAPAN SKOR</span></span>
+    <span class="scoreboard-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8m-4-4v4m-7-18h14v4a7 7 0 0 1-14 0V3Z"/><path d="M5 5H3v2a5 5 0 0 0 4 4.9M19 5h2v2a5 5 0 0 1-4 4.9"/></svg><span>PAPAN SKOR</span></span>
     <h1>Peringkat Tim</h1>
     <p>Peringkat sementara berdasarkan akumulasi skor mini games.</p>
 </section>
@@ -44,7 +44,13 @@
                 $progress = $totalRoutes > 0 ? min(100, round($team['completedGames'] / $totalRoutes * 100)) : 0;
             @endphp
             <article class="scoreboard-ranking-row {{ $rank === 1 ? 'scoreboard-ranking-first' : '' }}" style="--team-color: {{ $team['color'] ?? '#59746b' }}">
-                <span class="team-color-chip" aria-hidden="true"></span>
+                <span class="scoreboard-rank-badge scoreboard-rank-{{ $rank }}" aria-label="Peringkat {{ $rank }}">
+                    @if($rank === 1)
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8m-4-4v4m-7-18h14v4a7 7 0 0 1-14 0V3Z"/><path d="M5 5H3v2a5 5 0 0 0 4 4.9M19 5h2v2a5 5 0 0 1-4 4.9"/></svg>
+                    @else
+                        {{ $rank }}
+                    @endif
+                </span>
                 <span class="team-avatar scoreboard-ranking-avatar team-color-avatar">{{ $team['initials'] }}</span>
                 <b class="scoreboard-ranking-name">{{ $team['name'] }}</b>
                 <div class="scoreboard-ranking-progress">
@@ -61,9 +67,4 @@
     <div class="empty-state scoreboard-empty">Papan skor akan muncul setelah tim mendapatkan poin.</div>
 @endif
 
-@if($scores->isNotEmpty())
-    <section class="page-section"><div class="section-heading"><div><span class="eyebrow">HASIL TERBARU</span><h2>Skor permainan</h2></div></div>
-        <div class="table-card">@foreach($scores as $score)<div class="list-row"><span class="team-avatar">{{ $score->team->initials }}</span><div class="list-copy"><b>{{ $score->team->name }} · {{ $score->route->name }}</b><small>{{ $score->created_at->format('d M Y, H:i') }}{{ $score->note ? ' · '.$score->note : '' }}</small></div><strong class="points">{{ $score->points }} <small>PTS</small></strong></div>@endforeach</div>
-    </section>
-@endif
 @endsection
