@@ -19,7 +19,7 @@
                 <select name="route_id" required>
                     <option value="">Pilih rute</option>
                     @foreach($routes as $route)
-                        <option value="{{ $route->id }}" @selected(old('route_id') === $route->id)>{{ $route->name }} · {{ $route->game_type }}</option>
+                        <option value="{{ $route->id }}" data-route="{{ $route->name }}" data-location="{{ $route->location }}" @selected(old('route_id') === $route->id)>{{ $route->name }} · {{ $route->game_type }}</option>
                     @endforeach
                 </select>
             </label>
@@ -54,7 +54,7 @@
             </label>
             <img id="photo-preview" class="photo-preview experience-photo-preview" alt="Pratinjau foto" hidden>
             <div class="experience-submit-row">
-                <span id="experience-notice" class="muted" role="status">Cerita tersimpan. Caption disalin jika browser mengizinkan, lalu lanjutkan postingan di Instagram.</span>
+                <span id="experience-notice" class="muted" role="status">Pengalaman akan disimpan ke galeri. Gunakan tombol bagikan pada cerita untuk membagikannya ke Instagram.</span>
                 <button class="button primary" type="submit">Kirim Pengalaman</button>
             </div>
         </form>
@@ -79,7 +79,7 @@
                     <div class="experience-card-body">
                         <b class="experience-card-story">{{ $experience->story }}</b>
                         <div class="experience-card-meta"><span>{{ $experience->user->name }}, {{ $experience->team->name }}</span><b>★ {{ number_format($experience->rating, 1) }}</b></div>
-                        <button type="button" class="text-link share-story" data-team="{{ $experience->team->name }}" data-story="{{ $experience->story }}" data-photo="{{ $experience->media_url }}">Bagikan →</button>
+                        <button type="button" class="text-link share-story" data-team="{{ $experience->team->name }}" data-story="{{ $experience->story }}" data-route="{{ $experience->route->name }}" data-location="{{ $experience->route->location }}" data-download="{{ $experience->media_path ? route('experiences.download', $experience) : '' }}">Bagikan ke Instagram →</button>
                     </div>
                 </article>
             @empty
@@ -109,7 +109,7 @@
                 <span>CERITA TERBARU</span>
                 <b>{{ $latestExperience->story }}</b>
                 <small>— {{ $latestExperience->team->name }}, {{ $latestExperience->user->name }}</small>
-                <button type="button" class="text-link share-story" data-team="{{ $latestExperience->team->name }}" data-story="{{ $latestExperience->story }}" data-photo="{{ $latestExperience->media_url }}">Bagikan ke Instagram</button>
+                <button type="button" class="text-link share-story" data-team="{{ $latestExperience->team->name }}" data-story="{{ $latestExperience->story }}" data-route="{{ $latestExperience->route->name }}" data-location="{{ $latestExperience->route->location }}" data-download="{{ $latestExperience->media_path ? route('experiences.download', $latestExperience) : '' }}">Bagikan ke Instagram</button>
             </div>
         @else
             <div class="empty-state">Cerita terbaru akan muncul di sini setelah ada pengalaman dibagikan.</div>
@@ -145,37 +145,71 @@ photoInput?.addEventListener('change', () => {
     photoPreview.hidden = false;
 });
 
-async function shareStory(teamName, story, photoUrl, localFile = null, popup = null) {
-    const caption = `Petualangan Jeep bersama tim ${teamName}! ${story}\n\n@jeepadventuregarut\n\n#JeepAdventure #OffroadTeamBuilding #TeamBuilding`;
-    let copied = false;
-    try { await navigator.clipboard.writeText(caption); copied = true; } catch {}
-    if (localFile) {
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(localFile);
-        link.download = `jeep-adventure-story.${localFile.name.split('.').pop() || 'jpg'}`;
-        link.click();
-        URL.revokeObjectURL(link.href);
-    } else if (photoUrl) {
-        const link = document.createElement('a');
-        link.href = photoUrl;
-        link.download = 'jeep-adventure-story';
-        link.click();
+function buildStoryCaption(teamName, story, routeName, location) {
+    const openings = [
+        `Serunya berpetualang bersama tim ${teamName} di ${location}, sambil menaklukkan tantangan ${routeName}!`,
+        `Debu, tawa, dan kekompakan jadi satu—tim ${teamName} menjelajah ${location} di tantangan ${routeName}.`,
+        `Satu tim, satu petualangan! Kami, tim ${teamName}, seru-seruan di ${location} lewat tantangan ${routeName}.`,
+    ];
+    const closings = [
+        'Momen seperti ini bikin ingin berpetualang lagi!',
+        'Tantangan selesai, cerita serunya dibawa pulang!',
+        'Kompak di setiap tantangan, makin solid setelah petualangan!',
+    ];
+    const opening = openings[Math.floor(Math.random() * openings.length)];
+    const closing = closings[Math.floor(Math.random() * closings.length)];
+    return `@jeepadventuregarut\n\n${opening}\n\n“${story}”\n\n${closing}\nTerima kasih untuk petualangannya!\n\n#JeepAdventure #OffroadTeamBuilding #TeamBuilding`;
+}
+
+async function copyCaption(caption) {
+    try {
+        await navigator.clipboard.writeText(caption);
+        return true;
+    } catch {
+        const captionInput = document.createElement('textarea');
+        captionInput.value = caption;
+        captionInput.setAttribute('readonly', '');
+        captionInput.style.position = 'fixed';
+        captionInput.style.opacity = '0';
+        document.body.appendChild(captionInput);
+        captionInput.select();
+        try {
+            return document.execCommand('copy');
+        } catch {
+            return false;
+        } finally {
+            captionInput.remove();
+        }
     }
+}
+
+function downloadExperiencePhoto(downloadUrl) {
+    if (!downloadUrl) return false;
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = 'jeep-adventure-story';
+    link.hidden = true;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    return true;
+}
+
+async function shareStory(teamName, story, routeName, location, downloadUrl, popup = null) {
+    const photoDownloaded = downloadExperiencePhoto(downloadUrl);
+    const caption = buildStoryCaption(teamName, story, routeName, location);
+    const copied = await copyCaption(caption);
     if (popup) popup.location.href = instagram;
     else window.open(instagram, '_blank', 'noopener,noreferrer');
-    notice.textContent = `${localFile || photoUrl ? 'Foto siap diunduh. ' : ''}${copied ? 'Caption disalin. ' : 'Salin caption secara manual. '}Buat Story di Instagram dan tambahkan stiker Mention @jeepadventuregarut.`;
+    notice.textContent = `${photoDownloaded ? 'Foto mulai diunduh. ' : ''}${copied ? 'Caption pengalaman sudah disalin. ' : `Caption gagal disalin otomatis; salin caption secara manual: ${caption} `}Instagram dibuka dengan akun yang sedang login.`;
 }
 
 document.getElementById('experience-form')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const form = event.currentTarget;
-    const teamName = form.elements.team_id.selectedOptions[0]?.textContent || '';
-    const story = form.elements.story.value.trim();
-    const localFile = photoInput.files[0] || null;
-    const popup = window.open('about:blank', '_blank');
     const button = form.querySelector('button[type="submit"]');
     button.disabled = true;
-    notice.textContent = 'Menyimpan pengalaman...';
+    notice.textContent = 'Menyimpan pengalaman ke galeri...';
     try {
         const response = await fetch(form.action, {
             method: 'POST',
@@ -184,10 +218,9 @@ document.getElementById('experience-form')?.addEventListener('submit', async (ev
         });
         const payload = await response.json();
         if (!response.ok) throw new Error(payload.message || Object.values(payload.errors || {}).flat()[0] || 'Pengalaman gagal disimpan.');
-        await shareStory(teamName, story, payload.data.media_url, localFile, popup);
+        notice.textContent = 'Pengalaman berhasil ditambahkan ke galeri.';
         setTimeout(() => window.location.reload(), 1800);
     } catch (error) {
-        popup?.close();
         notice.textContent = error.message || 'Server tidak dapat dihubungi. Coba lagi nanti.';
     } finally {
         button.disabled = false;
@@ -201,9 +234,9 @@ document.querySelectorAll('[data-filter]').forEach((button) => button.addEventLi
     });
 }));
 
-document.querySelectorAll('.share-story').forEach((button) => button.addEventListener('click', () => {
+document.querySelectorAll('.share-story').forEach((button) => button.addEventListener('click', async () => {
     const popup = window.open('about:blank', '_blank');
-    shareStory(button.dataset.team, button.dataset.story, button.dataset.photo, null, popup);
+    await shareStory(button.dataset.team, button.dataset.story, button.dataset.route, button.dataset.location, button.dataset.download, popup);
 }));
 </script>
 @endpush

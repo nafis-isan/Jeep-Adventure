@@ -544,6 +544,7 @@ class AdventureApiTest extends TestCase
 
     public function test_experiences_page_shows_share_form_gallery_stats_and_latest_story(): void
     {
+        Storage::fake('public');
         $customer = $this->makeUser('CUSTOMER');
         $team = Team::create([
             'name' => 'Elang Penjelajah',
@@ -558,9 +559,12 @@ class AdventureApiTest extends TestCase
             'route_id' => $route->id,
             'story' => 'Petualangan yang sangat seru!',
             'rating' => 5,
+            'media_path' => 'experiences/galeri.jpg',
+            'media_type' => 'image/jpeg',
         ]);
+        Storage::disk('public')->put('experiences/galeri.jpg', 'photo-content');
 
-        $this->actingAs($customer)
+        $response = $this->actingAs($customer)
             ->get(route('experiences'))
             ->assertOk()
             ->assertSee('Petualangan Lebih Seru Jika Dibagikan.')
@@ -569,13 +573,75 @@ class AdventureApiTest extends TestCase
             ->assertSee('name="team_id"', false)
             ->assertSee('name="rating"', false)
             ->assertSee('value="5" checked', false)
+            ->assertSee('data-route="Pos Garuda"', false)
+            ->assertSee('data-location="Bukit Pasir"', false)
             ->assertSee('Titik Pemberhentian')
             ->assertSee('Tim Peserta')
             ->assertSee('Cerita Tersimpan')
             ->assertSee('Rating Terbaru')
             ->assertSee('CERITA TERBARU')
             ->assertSee('Petualangan yang sangat seru!')
-            ->assertSee('Bagikan ke Instagram');
+            ->assertSee('Bagikan ke Instagram')
+            ->assertSee("const instagram = 'https://www.instagram.com/'", false)
+            ->assertSee('await copyCaption(caption)', false)
+            ->assertSee('Bagikan ke Instagram →')
+            ->assertSee('data-team="Elang Penjelajah" data-story="Petualangan yang sangat seru!" data-route="Pos Garuda" data-location="Bukit Pasir"', false)
+            ->assertSee('return `@jeepadventuregarut\\n\\n${opening}', false)
+            ->assertSee('Pengalaman berhasil ditambahkan ke galeri.')
+            ->assertSee('data-download="'.route('experiences.download', Experience::first()).'"', false)
+            ->assertSee('@jeepadventuregarut');
+
+        $shareHandlerStart = strpos($response->getContent(), 'function downloadExperiencePhoto(');
+        $shareHandlerEnd = strpos($response->getContent(), "document.getElementById('experience-form')", $shareHandlerStart);
+        $this->assertNotFalse($shareHandlerStart);
+        $this->assertNotFalse($shareHandlerEnd);
+        $shareHandler = substr($response->getContent(), $shareHandlerStart, $shareHandlerEnd - $shareHandlerStart);
+        $this->assertStringContainsString('function downloadExperiencePhoto(downloadUrl)', $shareHandler);
+        $this->assertStringContainsString("link.download = 'jeep-adventure-story'", $shareHandler);
+        $this->assertStringContainsString('downloadExperiencePhoto(downloadUrl)', $shareHandler);
+
+        $submitHandlerStart = strpos($response->getContent(), "document.getElementById('experience-form')");
+        $submitHandlerEnd = strpos($response->getContent(), "document.querySelectorAll('[data-filter]')", $submitHandlerStart);
+        $this->assertNotFalse($submitHandlerStart);
+        $this->assertNotFalse($submitHandlerEnd);
+        $submitHandler = substr($response->getContent(), $submitHandlerStart, $submitHandlerEnd - $submitHandlerStart);
+        $this->assertStringNotContainsString('window.open', $submitHandler);
+        $this->assertStringNotContainsString('copyCaption', $submitHandler);
+        $this->assertStringNotContainsString('shareStory', $submitHandler);
+    }
+
+    public function test_customer_can_download_an_experience_photo_as_an_attachment(): void
+    {
+        Storage::fake('public');
+        $customer = $this->makeUser('CUSTOMER');
+        $team = Team::create([
+            'name' => 'Elang Penjelajah',
+            'initials' => 'EP',
+            'motto' => 'Terbang tinggi',
+            'status' => 'APPROVED',
+        ]);
+        $route = $this->makeRoute();
+        $photoPath = 'experiences/momen.jpg';
+        Storage::disk('public')->put($photoPath, 'fake-image-content');
+        $experience = Experience::create([
+            'user_id' => $customer->id,
+            'team_id' => $team->id,
+            'route_id' => $route->id,
+            'story' => 'Petualangan seru',
+            'rating' => 5,
+            'media_path' => $photoPath,
+            'media_type' => 'image/jpeg',
+        ]);
+
+        $this->actingAs($customer)
+            ->get(route('experiences.download', $experience))
+            ->assertOk()
+            ->assertHeader('content-disposition', 'attachment; filename=jeep-adventure-story.jpg');
+
+        $experience->update(['media_path' => 'experiences/missing.jpg']);
+        $this->actingAs($customer)
+            ->get(route('experiences.download', $experience))
+            ->assertNotFound();
     }
 
     private function makeUser(string $role): User
