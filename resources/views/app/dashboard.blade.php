@@ -10,21 +10,21 @@
 @endphp
 <section class="dashboard-hero">
     <div class="dashboard-hero-content">
-        <span class="dashboard-badge"><span aria-hidden="true">✧</span> OFFROAD · TEAM BUILDING · MINI GAMES</span>
+        <span class="dashboard-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2Z"/><path d="m19 15 .9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15Z"/></svg> OFFROAD · TEAM BUILDING · MINI GAMES</span>
         <h1>Petualangan Jeep<br>bukan sekadar keliling.</h1>
         <p>Rute offroad dengan titik-titik pemberhentian berisi mini games seru — ketepatan, puzzle, estafet, hingga treasure hunt. Jeep + team building dalam satu petualangan.</p>
         <div class="button-row">
-            <a class="button dashboard-primary" href="{{ route('routes') }}"><span aria-hidden="true">♧</span> Lihat Rute &amp; Games</a>
-            <a class="button dashboard-secondary" href="{{ route('scoreboard') }}"><span aria-hidden="true">♜</span> Papan Skor</a>
+            <a class="button dashboard-primary" href="{{ route('routes') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/></svg> Lihat Rute &amp; Games</a>
+            <a class="button dashboard-secondary" href="{{ route('scoreboard') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8m-4-4v4m-7-18h14v4a7 7 0 0 1-14 0V3Z"/><path d="M5 5H3v2a5 5 0 0 0 4 4.9M19 5h2v2a5 5 0 0 1-4 4.9"/></svg> Papan Skor</a>
         </div>
     </div>
 </section>
 
 <section class="dashboard-stats" aria-label="Statistik petualangan">
-    <article class="dashboard-stat"><span class="dashboard-stat-icon stat-green" aria-hidden="true">⚑</span><b>{{ $stats['routes'] }}</b><small>Titik Pemberhentian</small></article>
-    <article class="dashboard-stat"><span class="dashboard-stat-icon stat-orange" aria-hidden="true">♧</span><b>{{ $stats['teams'] }}</b><small>Tim Peserta</small></article>
-    <article class="dashboard-stat"><span class="dashboard-stat-icon stat-blue" aria-hidden="true">⚿</span><b>{{ $stats['scores'] }}</b><small>Game Selesai</small></article>
-    <article class="dashboard-stat"><span class="dashboard-stat-icon stat-gold" aria-hidden="true">♜</span><b>{{ number_format($leaderPoints) }}</b><small>Skor Tertinggi</small></article>
+    <article class="dashboard-stat"><span class="dashboard-stat-icon stat-green" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 21V4"/><path d="M5 5c5-4 9 4 14 0v11c-5 4-9-4-14 0"/></svg></span><b>{{ $stats['routes'] }}</b><small>Titik Pemberhentian</small></article>
+    <article class="dashboard-stat"><span class="dashboard-stat-icon stat-orange" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><b>{{ $stats['teams'] }}</b><small>Tim Peserta</small></article>
+    <article class="dashboard-stat"><span class="dashboard-stat-icon stat-blue" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 8h12a3 3 0 0 1 2.9 2.2l1 4A3 3 0 0 1 19 18h-1l-2-2H8l-2 2H5a3 3 0 0 1-2.9-3.8l1-4A3 3 0 0 1 6 8Z"/><path d="M7 11v4m-2-2h4m7-1h.01M18 14h.01"/></svg></span><b>{{ $stats['scores'] }}</b><small>Game Selesai</small></article>
+    <article class="dashboard-stat"><span class="dashboard-stat-icon stat-gold" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 21h8m-4-4v4m-7-18h14v4a7 7 0 0 1-14 0V3Z"/><path d="M5 5H3v2a5 5 0 0 0 4 4.9M19 5h2v2a5 5 0 0 1-4 4.9"/></svg></span><b>{{ number_format($leaderPoints) }}</b><small>Skor Tertinggi</small></article>
 </section>
 
 <section class="dashboard-routes">
@@ -36,27 +36,7 @@
         @forelse($routes as $index => $route)
             <a class="route-timeline-item" href="{{ route('routes.show', $route) }}">
                 <span class="route-timeline-marker" style="--route-color: {{ $route->color ?: ($routeColors[$index % count($routeColors)]) }}">
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        @switch($route->position)
-                            @case(1)
-                                <circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>
-                                @break
-                            @case(2)
-                                <path d="M8 4.5a2.5 2.5 0 1 1 4.6 1.3H18a2 2 0 0 1 2 2v3.4a2.5 2.5 0 1 0 0 5V19a2 2 0 0 1-2 2h-3.5a2.5 2.5 0 1 0-5 0H6a2 2 0 0 1-2-2v-3.4a2.5 2.5 0 1 0 0-5V7a2 2 0 0 1 2-2h3.3A2.5 2.5 0 0 1 8 4.5Z"/>
-                                @break
-                            @case(3)
-                                <path d="M8 3.5S4.5 8 4.5 11a3.5 3.5 0 0 0 7 0C11.5 8 8 3.5 8 3.5Z"/><path d="M16.5 7s-3 3.8-3 6.5a3 3 0 0 0 6 0c0-2.7-3-6.5-3-6.5Z"/>
-                                @break
-                            @case(4)
-                                <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M16.5 10a2.5 2.5 0 1 0 0-5"/><path d="M3.5 19v-1.5A4.5 4.5 0 0 1 8 13h2a4.5 4.5 0 0 1 4.5 4.5V19Z"/><path d="M16 13a4 4 0 0 1 4 4v2h-3"/>
-                                @break
-                            @case(5)
-                                <path d="M8.5 6 10 4h4l1.5 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"/><circle cx="12" cy="12.5" r="3.5"/>
-                                @break
-                            @default
-                                <circle cx="12" cy="12" r="9"/><path d="m15.8 8.2-2.4 5.2-5.2 2.4 2.4-5.2 5.2-2.4Z"/>
-                        @endswitch
-                    </svg>
+                    @include('app.partials.route-icon', ['icon' => $route->icon])
                 </span>
                 @if($index < $routes->count() - 1)<span class="route-timeline-line" aria-hidden="true"></span>@endif
                 <span class="route-timeline-copy">
@@ -72,7 +52,7 @@
 </section>
 
 <section class="dashboard-leader">
-    <span class="dashboard-leader-icon" aria-hidden="true">♜</span>
+    <span class="dashboard-leader-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 21h8m-4-4v4m-7-18h14v4a7 7 0 0 1-14 0V3Z"/><path d="M5 5H3v2a5 5 0 0 0 4 4.9M19 5h2v2a5 5 0 0 1-4 4.9"/></svg></span>
     <div class="dashboard-leader-copy">
         <small>PEMUNCAK SEMENTARA</small>
         <b>{{ $leader?->name ?? 'Belum ada tim' }}</b>

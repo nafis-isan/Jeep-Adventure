@@ -14,11 +14,11 @@
             <aside class="sidebar">
                 <a href="{{ route('dashboard') }}" class="brand">
                     <img src="{{ asset('Assets/images/jeep-adventure-logo.jpeg') }}" alt="" class="brand-mark">
-                    <span>JEEP <b>ADVENTURE</b></span>
+                    <span class="brand-copy"><b>Jeep Adventure</b><small>OFFROAD TEAM<br>BUILDING</small></span>
                 </a>
                 <nav class="side-nav" aria-label="Navigasi utama">
                     <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m3 20 7-15 3.2 7 2.3-4 5.5 12H3Z"/><path d="m7 12 1.5 1.5L10 12"/></svg>
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m3 20 7-15 3.2 7 2.3-4 5.5 12H3Z"/></svg>
                         <span>Dashboard</span>
                     </a>
                     <a href="{{ route('routes') }}" class="{{ request()->routeIs('routes*') ? 'active' : '' }}">
@@ -56,7 +56,7 @@
             </aside>
             <main class="main-content">
                 <header class="mobile-header">
-                    <a href="{{ route('dashboard') }}" class="brand"><img src="{{ asset('Assets/images/jeep-adventure-logo.jpeg') }}" alt="" class="brand-mark"><span>JEEP <b>ADVENTURE</b></span></a>
+                    <a href="{{ route('dashboard') }}" class="brand"><img src="{{ asset('Assets/images/jeep-adventure-logo.jpeg') }}" alt="" class="brand-mark"><span class="brand-copy"><b>Jeep Adventure</b><small>OFFROAD TEAM<br>BUILDING</small></span></a>
                     <form method="post" action="{{ route('logout') }}">@csrf<button class="mobile-logout" type="submit">Keluar</button></form>
                 </header>
                 @if(session('status'))

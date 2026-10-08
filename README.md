@@ -111,7 +111,6 @@ Seeder membuat akun berikut:
 
 | Peran | Email | Password |
 | --- | --- | --- |
-| Customer | `customer@jeep-adventure.local` | `password123` |
 | Fasilitator | `fasilitator@jeep-adventure.local` | `jeepadventurehebat` |
 
 Kredensial ini hanya untuk lingkungan lokal. Ganti password dan jangan gunakan akun demo di production. Menjalankan ulang `php artisan db:seed` akan menyelaraskan kembali akun demo dengan password pada seeder.

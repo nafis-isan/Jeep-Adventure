@@ -14,28 +14,18 @@
     };
 @endphp
 <section class="route-detail-banner" style="--route-color: {{ $routeColor }}">
-    <a class="route-detail-banner-back" href="{{ route('routes') }}">← &nbsp; Rute</a>
+    <div class="route-detail-banner-top">
+        <a class="route-detail-banner-back" href="{{ route('routes') }}">← &nbsp; Rute</a>
+        @if(auth()->user()->isFacilitator())
+            <button class="button route-edit-trigger" type="button" data-open-route-edit-modal>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 4 4M4 20l4-.8L19.3 7.9a2.1 2.1 0 0 0-3-3L5 16.2 4 20Z"/></svg>
+                Edit Pos
+            </button>
+        @endif
+    </div>
     <span class="route-detail-banner-title">
         <span class="route-detail-banner-icon" aria-hidden="true">
-            @switch($route->position)
-                @case(1)
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg>
-                    @break
-                @case(2)
-                    <svg viewBox="0 0 24 24"><path d="M8 4.5a2.5 2.5 0 1 1 4.6 1.3H18a2 2 0 0 1 2 2v3.4a2.5 2.5 0 1 0 0 5V19a2 2 0 0 1-2 2h-3.5a2.5 2.5 0 1 0-5 0H6a2 2 0 0 1-2-2v-3.4a2.5 2.5 0 1 0 0-5V7a2 2 0 0 1 2-2h3.3A2.5 2.5 0 0 1 8 4.5Z"/></svg>
-                    @break
-                @case(3)
-                    <svg viewBox="0 0 24 24"><path d="M8 3.5S4.5 8 4.5 11a3.5 3.5 0 0 0 7 0C11.5 8 8 3.5 8 3.5Z"/><path d="M16.5 7s-3 3.8-3 6.5a3 3 0 0 0 6 0c0-2.7-3-6.5-3-6.5Z"/></svg>
-                    @break
-                @case(4)
-                    <svg viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M16.5 10a2.5 2.5 0 1 0 0-5"/><path d="M3.5 19v-1.5A4.5 4.5 0 0 1 8 13h2a4.5 4.5 0 0 1 4.5 4.5V19Z"/><path d="M16 13a4 4 0 0 1 4 4v2h-3"/></svg>
-                    @break
-                @case(5)
-                    <svg viewBox="0 0 24 24"><path d="M8.5 6 10 4h4l1.5 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"/><circle cx="12" cy="12.5" r="3.5"/></svg>
-                    @break
-                @default
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.8 8.2-2.4 5.2-5.2 2.4 2.4-5.2 5.2-2.4Z"/></svg>
-            @endswitch
+            @include('app.partials.route-icon', ['icon' => $route->icon])
         </span>
         <span><small>POS {{ $route->position }}</small><b>{{ $route->name }}</b></span>
     </span>
@@ -47,22 +37,50 @@
     </span>
 </section>
 
+@if(auth()->user()->isFacilitator())
+    <dialog class="route-modal route-edit-modal" data-route-edit-modal aria-labelledby="route-edit-modal-title">
+        <div class="route-modal-header">
+            <h2 id="route-edit-modal-title">Edit Pos</h2>
+            <button class="route-modal-close" type="button" aria-label="Tutup" data-close-route-edit-modal>×</button>
+        </div>
+        @if($errors->any() && old('name'))
+            <div class="flash error route-modal-errors" role="alert">
+                <b>Periksa kembali data pos.</b>
+                <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+            </div>
+        @endif
+        <form method="post" action="{{ route('routes.update', $route) }}" class="form-grid route-modal-form">
+            @csrf
+            @method('PATCH')
+            <label>Nama Pos<input name="name" value="{{ old('name', $route->name) }}" required minlength="2"></label>
+            <label>Jenis Game<input name="game_type" value="{{ old('game_type', $route->game_type) }}" required minlength="2"></label>
+            <label>Lokasi<input name="location" value="{{ old('location', $route->location) }}" required minlength="2"></label>
+            <label>Durasi (Menit)<input name="duration" type="number" min="1" value="{{ old('duration', $route->duration) }}" required></label>
+            <label>Skor Maksimum<input name="max_points" type="number" min="0" value="{{ old('max_points', $route->max_points) }}" required></label>
+            <label>Kesulitan<select name="difficulty" required>
+                @foreach(array_unique(['Mudah', 'Sedang', 'Sulit', $route->difficulty]) as $difficulty)
+                    <option value="{{ $difficulty }}" @selected(old('difficulty', $route->difficulty) === $difficulty)>{{ $difficulty }}</option>
+                @endforeach
+            </select></label>
+            @include('app.partials.route-icon-picker', ['selectedIcon' => old('icon', $route->icon)])
+            <label>Warna Identitas<input name="color" type="color" value="{{ old('color', $route->color ?: $routeColor) }}" required></label>
+            <label class="wide">Deskripsi<textarea name="description" rows="3" required minlength="2">{{ old('description', $route->description) }}</textarea></label>
+            <label class="wide">Instruksi Permainan <small class="muted">(Opsional)</small><textarea name="instruction" rows="3">{{ old('instruction', $route->instruction) }}</textarea></label>
+            <div class="route-modal-actions wide">
+                <button class="button primary" type="submit">Simpan Perubahan</button>
+                <button class="button subtle" type="button" data-close-route-edit-modal>Batalkan</button>
+            </div>
+        </form>
+    </dialog>
+@endif
+
 <div class="route-detail-layout route-detail-page {{ auth()->user()->isFacilitator() ? 'has-score-panel' : 'customer-route-detail' }}" style="--route-color: {{ $routeColor }}">
     <div class="route-detail-main">
         <section class="panel route-challenge-panel">
             <h2>Tentang {{ $route->game_type }}</h2>
             <p>{{ $route->description }}</p>
             <div class="route-instruction-block">
-                <b><span class="route-instruction-icon" aria-hidden="true">
-                    @switch($route->position)
-                        @case(1) ◎ @break
-                        @case(2) ♧ @break
-                        @case(3) ♨ @break
-                        @case(4) ♧ @break
-                        @case(5) ▣ @break
-                        @default ⊙
-                    @endswitch
-                </span>Instruksi Permainan</b>
+                <b><span class="route-instruction-icon" aria-hidden="true">@include('app.partials.route-icon', ['icon' => $route->icon])</span>Instruksi Permainan</b>
                 <p>{{ $route->instruction ?: 'Instruksi permainan akan ditambahkan oleh fasilitator.' }}</p>
             </div>
         </section>
@@ -124,7 +142,8 @@
                         </div>
                         @if($score->photo_url)
                             <a class="route-result-photo" href="{{ $score->photo_url }}" target="_blank" rel="noopener" aria-label="Lihat foto bukti {{ $score->team->name }}">
-                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h2l1.5-2h5L16 5h2a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3.5"/></svg>
+                                <img class="route-result-photo-image" src="{{ $score->photo_url }}" alt="Bukti foto {{ $score->team->name }} di {{ $route->name }}" loading="lazy" decoding="async">
+                                <span>Bukti foto</span>
                             </a>
                         @endif
                         <strong class="points">{{ $score->points }}</strong>
@@ -153,25 +172,24 @@
     @endif
 </div>
 
-@if(auth()->user()->isFacilitator())
-    <details class="panel form-panel">
-        <summary class="panel-summary"><span><b>Edit informasi pos</b><small>Perbarui detail, instruksi, atau nilai permainan.</small></span><span class="button subtle">Edit pos</span></summary>
-        <form method="post" action="{{ route('routes.update', $route) }}" class="form-grid">@csrf @method('PATCH')
-            <label>Nama pos<input name="name" value="{{ $route->name }}" required></label><label>Jenis permainan<input name="game_type" value="{{ $route->game_type }}" required></label>
-            <label>Lokasi<input name="location" value="{{ $route->location }}" required></label><label>Durasi (menit)<input name="duration" type="number" min="1" value="{{ $route->duration }}" required></label>
-            <label>Skor maksimum<input name="max_points" type="number" min="0" value="{{ $route->max_points }}" required></label><label>Tingkat kesulitan<input name="difficulty" value="{{ $route->difficulty }}" required></label>
-            <label>Warna<input name="color" type="color" value="{{ $route->color }}"></label><label class="wide">Deskripsi<textarea name="description" required>{{ $route->description }}</textarea></label>
-            <label class="wide">Instruksi permainan<textarea name="instruction" rows="4">{{ $route->instruction }}</textarea></label>
-            <button class="button primary" type="submit">Simpan perubahan <span>→</span></button>
-        </form>
-    </details>
-@endif
 @endsection
 
 @push('scripts')
 <script>
 const scorePhotoInput = document.getElementById('score-photo');
 const scorePhotoPreview = document.getElementById('score-photo-preview');
+const routeEditModal = document.querySelector('[data-route-edit-modal]');
+
+document.querySelector('[data-open-route-edit-modal]')?.addEventListener('click', () => routeEditModal?.showModal());
+document.querySelectorAll('[data-close-route-edit-modal]').forEach((button) => {
+    button.addEventListener('click', () => routeEditModal?.close());
+});
+routeEditModal?.addEventListener('click', (event) => {
+    if (event.target === routeEditModal) routeEditModal.close();
+});
+@if($errors->any() && old('name'))
+    routeEditModal?.showModal();
+@endif
 
 scorePhotoInput?.addEventListener('change', () => {
     const file = scorePhotoInput.files?.[0];

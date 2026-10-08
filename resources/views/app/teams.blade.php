@@ -6,13 +6,16 @@
 <section class="page-heading teams-page-heading">
     <div class="teams-page-heading-top">
         <div>
-            <span class="route-page-badge"><span aria-hidden="true">♧</span> TIM PESERTA</span>
+            <span class="route-page-badge teams-page-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg> TIM PESERTA</span>
             <h1>Daftar Tim</h1>
             <p>Kelola tim yang bertualang di rute Jeep Adventure.</p>
         </div>
-        <button class="button primary route-add-button" type="button" data-open-team-modal>
-            {{ auth()->user()->isFacilitator() ? '+ Tambah Tim' : '+ Daftarkan Tim' }}
-        </button>
+        @if(auth()->user()->isFacilitator())
+            <button class="button primary route-add-button" type="button" data-open-team-modal>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                Tambah Tim
+            </button>
+        @endif
     </div>
 </section>
 
@@ -62,55 +65,45 @@
             </div>
         </form>
     </dialog>
-@else
-    <dialog class="route-modal team-modal" data-team-modal aria-labelledby="team-modal-title">
-        <div class="route-modal-header">
-            <h2 id="team-modal-title">Daftarkan Tim</h2>
-            <button class="route-modal-close" type="button" aria-label="Tutup" data-close-team-modal>×</button>
-        </div>
-        @if($errors->any() && old('name'))
-            <div class="flash error route-modal-errors" role="alert">
-                <b>Periksa kembali data tim.</b>
-                <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
-            </div>
-        @endif
-        <form method="post" action="{{ route('teams.store') }}" class="form-grid route-modal-form">
-            @csrf
-            <label>Nama Tim<input name="name" value="{{ old('name') }}" required minlength="2" placeholder="Nama tim"></label>
-            <label>Motto Tim<input name="motto" value="{{ old('motto') }}" required minlength="2" placeholder="Motto tim"></label>
-            <label class="wide">Nama Anggota <small class="muted">(satu nama per baris)</small><textarea name="members_text" rows="3" placeholder="Nama anggota 1&#10;Nama anggota 2">{{ old('members_text') }}</textarea></label>
-            <div class="route-modal-actions wide">
-                <button class="button primary" type="submit">Kirim Pendaftaran</button>
-                <button class="button subtle" type="button" data-close-team-modal>Batalkan</button>
-            </div>
-        </form>
-    </dialog>
 @endif
 
 <section class="page-section teams-page-section">
-    <div class="section-heading"><div><span class="eyebrow">PESERTA</span><h2>{{ $teams->count() }} tim terdaftar</h2></div></div>
+    <h2 class="visually-hidden">{{ $teams->count() }} tim terdaftar</h2>
     <div class="team-grid teams-card-grid">
         @forelse($teams as $team)
             <article class="team-card teams-list-card" style="--team-color: {{ $team['color'] ?? '#59746b' }}">
                 <div class="teams-card-top">
                     <span class="team-avatar teams-list-avatar team-color-avatar">{{ $team['initials'] }}</span>
                     <span class="teams-card-identity"><b>{{ $team['name'] }}</b><small>{{ count($team['members'] ?? []) }} anggota</small></span>
-                    <span class="status status-{{ strtolower($team['status']) }}">{{ strtolower($team['status']) === 'approved' ? 'Disetujui' : (strtolower($team['status']) === 'rejected' ? 'Ditolak' : 'Menunggu') }}</span>
+                    @if(auth()->user()->isFacilitator())
+                        @if(strtoupper($team['status']) === 'APPROVED')
+                            <details class="teams-status-menu">
+                                <summary><span class="visually-hidden">Kelola status {{ $team['name'] }}</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></summary>
+                                <form method="post" action="{{ route('teams.status', $team['id']) }}">@csrf @method('PATCH')<input type="hidden" name="status" value="rejected"><button type="submit">Tolak tim</button></form>
+                            </details>
+                        @endif
+                        <form method="post" action="{{ route('teams.destroy', $team['id']) }}" class="teams-delete-form" onsubmit="return confirm('Hapus tim {{ addslashes($team['name']) }}?')">@csrf @method('DELETE')<button class="teams-delete-button" type="submit" aria-label="Hapus tim {{ $team['name'] }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6"/></svg></button></form>
+                    @endif
                 </div>
-                <p class="team-motto">“{{ $team['motto'] }}”</p>
+                @if(strtoupper($team['status']) !== 'APPROVED')
+                    <span class="status teams-status status-{{ strtolower($team['status']) }}">{{ strtolower($team['status']) === 'rejected' ? 'Ditolak' : 'Menunggu persetujuan' }}</span>
+                @endif
+                <p class="team-motto teams-list-motto">“{{ $team['motto'] }}”</p>
                 <div class="teams-card-stats">
-                    <span><b>{{ $team['completedRoutes'] }}</b> pos</span>
+                    <div class="teams-card-progress">
+                        <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4"/><path d="M5 5c5-4 9 4 14 0v11c-5 4-9-4-14 0"/></svg>{{ $team['completedRoutes'] }}/{{ $totalRoutes }} pos</span>
+                        <span><svg class="teams-check-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg>{{ $team['completedGames'] }} game selesai</span>
+                    </div>
                     <strong>{{ number_format($team['totalPoints']) }} <small>total poin</small></strong>
                 </div>
                 @if(auth()->user()->isFacilitator())
                     <div class="team-actions">
                         @if(strtoupper($team['status']) !== 'APPROVED')
                             <form method="post" action="{{ route('teams.status', $team['id']) }}">@csrf @method('PATCH')<input type="hidden" name="status" value="approved"><button class="button small primary" type="submit">Setujui</button></form>
+                            @if(strtoupper($team['status']) === 'PENDING')
+                                <form method="post" action="{{ route('teams.status', $team['id']) }}">@csrf @method('PATCH')<input type="hidden" name="status" value="rejected"><button class="button small subtle" type="submit">Tolak</button></form>
+                            @endif
                         @endif
-                        @if(strtoupper($team['status']) !== 'REJECTED')
-                            <form method="post" action="{{ route('teams.status', $team['id']) }}">@csrf @method('PATCH')<input type="hidden" name="status" value="rejected"><button class="button small subtle" type="submit">Tolak</button></form>
-                        @endif
-                        <form method="post" action="{{ route('teams.destroy', $team['id']) }}" onsubmit="return confirm('Hapus tim {{ addslashes($team['name']) }}?')">@csrf @method('DELETE')<button class="button small danger" type="submit">Hapus</button></form>
                     </div>
                 @endif
             </article>
